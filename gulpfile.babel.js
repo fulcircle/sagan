@@ -23,7 +23,7 @@ const paths = {
 };
 
 gulp.task('js', () => {
-    var bundler = browserify({
+    let bundler = browserify({
         entries: paths.js.src + '/app.js',
         debug: true
     });
@@ -36,7 +36,9 @@ gulp.task('js', () => {
         .pipe(buffer())
         //.pipe(uglify()) // Use any gulp plugins you want now
         .pipe(sourcemaps.init({ loadMaps: true }))
-        .pipe(sourcemaps.write('./'))
+        .pipe(sourcemaps.write('./', {
+            sourceMappingURLPrefix: '/js'
+        }))
         .pipe(gulp.dest(paths.js.dst));
 });
 
