@@ -17,6 +17,7 @@ export class Camera {
 
     focus(object) {
         this.orbit.target.copy(object.position);
+        this.orbit.update();
     }
 
 }

@@ -1,7 +1,7 @@
 import THREE from '../vendor/three.min.js'
 import { Camera } from '../modules/camera.js'
 
-export class Renderer {
+export class Engine  {
 
     constructor(container) {
         this.container = container;

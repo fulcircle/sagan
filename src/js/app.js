@@ -1,24 +1,16 @@
-import { TriangleStripMesh } from './modules/mesh.js'
-import { Renderer } from './modules/renderer.js'
+import "babel-polyfill";
+import { TerrainMesh } from './modules/mesh.js'
+import { Engine } from './modules/engine.js'
 
-let mesh = new TriangleStripMesh();
-mesh.addStrip([
-    [-1.0, -1.0,  1.0],
-    [ 1.0, -1.0,  1.0],
-    [ 1.0,  1.0,  1.0],
+let engine = new Engine(document.body);
+window.engine = engine;
 
-    [ 1.0,  1.0,  1.0],
-    [-1.0,  1.0,  1.0],
-    [-1.0, -1.0,  1.0]
-]);
+document.body.appendChild(engine.domElement);
 
-let renderer = new Renderer(document.body);
-window.renderer = renderer;
+let mesh = new TerrainMesh(16, 16);
+mesh.randomTerrain();
+engine.addWireframe(mesh, 0x00ff00);
+engine.focus(mesh);
 
-document.body.appendChild(renderer.domElement);
-
-renderer.addWireframe(mesh, 0x00ff00);
-renderer.focus(mesh);
-
-renderer.render();
+//engine.render();
 
