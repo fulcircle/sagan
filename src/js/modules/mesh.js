@@ -27,6 +27,8 @@ export class TriangleMesh extends Mesh {
     }
 
     generateMesh(vertexPositions) {
+
+
         let vertices = new Float32Array(vertexPositions.length * 3);
 
         for ( var i = 0; i < vertexPositions.length; i++ )
@@ -51,12 +53,12 @@ export class TriangleMesh extends Mesh {
 
 export class TerrainMesh extends TriangleMesh {
 
-    constructor(width, height) {
+    constructor({width, height, LOD=1, maxLOD=4}) {
         super();
         this.width = width;
         this.height = height;
-        this.maxLOD = 4;
-        this.LOD = 1;
+        this.maxLOD = maxLOD;
+        this.LOD = LOD;
     }
 
     randomHeightMap() {
@@ -81,40 +83,87 @@ export class TerrainMesh extends TriangleMesh {
     set LOD(level) {
         this._lod = level;
         this.setStride();
+        this.generateTerrain();
     }
 
     get LOD() {
         return this._lod;
     }
 
+    // TODO: Think of optimizations
     getHeight(x, y) {
-        var smoothedHeightMap = Smooth(this.heightMap, {
-            scaleTo: this.width,
-            method: Smooth.METHOD_CUBIC
-        });
+        // Get the ratio of the heightmap dimensions to the mesh dimensions
+        let xratio = this.heightMap.length * ( 1 / this.width );
+        let yratio = this.heightMap[0].length * (1 / this.height );
 
-        var scaled = smoothedHeightMap(x)[y];
-        return scaled;
+        // Get the height coordinates on the heightmap that correspond to the x,y vertex on the mesh
+        // Note: this won't necessarily be an integer, which is why we perform a bilinear interpolation next
+        let heightmapx = x*xratio;
+        let heightmapy = y*yratio;
+
+        // Interpolate the height value for x,y on the heightmap using bilinear interpolation
+        // See: http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
+
+        let x1 = Math.floor(heightmapx);
+        let x2 = Math.ceil(heightmapx);
+        let y1 = Math.floor(heightmapy);
+        let y2 = Math.ceil(heightmapy);
+
+        // The four surrounding pixels to this pixel on the heightmap
+        let q11 = this.heightMap[x1][y1];
+        let q12 = this.heightMap[x1][y2];
+        let q21 = this.heightMap[x2][y1];
+        let q22 = this.heightMap[x2][y2];
+
+        // The bilinear interpolation
+        let r1, r2, height = null;
+        if (x2 == x1) {
+            r1 = q11;
+            r2 = q12;
+        } else {
+            r1 = ((x2 - heightmapx)/(x2 - x1))*q11 + ((heightmapx - x1)/(x2 - x1))*q21;
+            r2 = ((x2 - heightmapx)/(x2 - x1))*q12 + ((heightmapx - x1)/(x2 - x1))*q22;
+        }
+
+        if (y2 == y1) {
+            height = r1;
+        } else {
+            height = ((y2 - heightmapy)/(y2 - y1))*r1 + ((heightmapy - y1)/(y2 - y1))*r2;
+        }
+
+
+        return height;
     }
 
-    randomTerrain() {
+    generateTerrain() {
+        if (!this.heightMap) {
+            return;
+        }
+
+        console.log("Generating terrain..");
+
         let vertexPositions = [];
-
-        this.randomHeightMap();
-
-        for (var i = 0; i < this.width; i = i + this.stride) {
-            for (var j = 0; j < this.height; j = j + this.stride) {
+        for (var i = 0; i < this.width-1; i = i + this.stride) {
+            for (var j = 0; j < this.height-1; j = j + this.stride) {
                 //Create two triangles that will generate a square
-                vertexPositions.push([i, j, this.getHeight(i, j)]);
-                vertexPositions.push([i+this.stride, j, this.getHeight(i, j)]);
-                vertexPositions.push([i, j+this.stride, this.getHeight(i, j)]);
 
-                vertexPositions.push([i+this.stride, j, this.getHeight(i, j)]);
-                vertexPositions.push([i+this.stride, j+this.stride, this.getHeight(i, j)]);
-                vertexPositions.push([i, j+this.stride, this.getHeight(i, j)]);
+                let i0 = i;
+                let i1 = i + this.stride;
+
+                let j0 = j;
+                let j1 = j + this.stride;
+
+                vertexPositions.push([i0, j0, this.getHeight(i0, j0)]);
+                vertexPositions.push([i1, j0, this.getHeight(i1, j0)]);
+                vertexPositions.push([i0, j1, this.getHeight(i0, j1)]);
+
+                vertexPositions.push([i1, j0, this.getHeight(i1, j0)]);
+                vertexPositions.push([i1, j1, this.getHeight(i1, j1)]);
+                vertexPositions.push([i0, j1, this.getHeight(i0, j1)]);
 
             }
         }
         this.generateMesh(vertexPositions);
     }
+
 }

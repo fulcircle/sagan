@@ -30,6 +30,12 @@ export class Engine  {
         this.scene.add(mesh.mesh);
     }
 
+    removeMesh(mesh) {
+        console.log(mesh.mesh);
+
+        this.scene.remove(mesh.mesh);
+    }
+
     get domElement() {
         return this.renderer.domElement;
     }

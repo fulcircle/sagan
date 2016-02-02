@@ -4519,12 +4519,23 @@ window.engine = engine;
 
 document.body.appendChild(engine.domElement);
 
-var mesh = new _mesh.TerrainMesh(16, 16);
-mesh.randomTerrain();
+var mesh = new _mesh.TerrainMesh({ width: 16, height: 16, LOD: 1 });
+mesh.randomHeightMap();
+mesh.generateTerrain();
 engine.addWireframe(mesh, 0x00ff00);
 engine.focus(mesh);
 
-//engine.render();
+engine.render();
+
+setTimeout(remove, 1000);
+
+function remove() {
+    //let newMesh = new TerrainMesh({width: 16, height: 16, LOD: 2});
+    //newMesh.randomHeightMap();
+    //newMesh.generateTerrain();
+    engine.removeMesh(mesh);
+    //engine.addWireframe(newMesh, 0x00ff00);
+}
 
 },{"./modules/engine.js":193,"./modules/mesh.js":194,"babel-polyfill":1}],192:[function(require,module,exports){
 'use strict';
@@ -4626,6 +4637,13 @@ var Engine = exports.Engine = function () {
             this.scene.add(mesh.mesh);
         }
     }, {
+        key: 'removeMesh',
+        value: function removeMesh(mesh) {
+            console.log(mesh.mesh);
+
+            this.scene.remove(mesh.mesh);
+        }
+    }, {
         key: 'addWireframe',
         value: function addWireframe(mesh, color) {
             this.scene.add(mesh.wireFrame(color));
@@ -4718,6 +4736,7 @@ var TriangleMesh = exports.TriangleMesh = function (_Mesh) {
     _createClass(TriangleMesh, [{
         key: 'generateMesh',
         value: function generateMesh(vertexPositions) {
+
             var vertices = new Float32Array(vertexPositions.length * 3);
 
             for (var i = 0; i < vertexPositions.length; i++) {
@@ -4746,15 +4765,22 @@ var TriangleMesh = exports.TriangleMesh = function (_Mesh) {
 var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
     _inherits(TerrainMesh, _TriangleMesh);
 
-    function TerrainMesh(width, height) {
+    function TerrainMesh(_ref) {
+        var width = _ref.width;
+        var height = _ref.height;
+        var _ref$LOD = _ref.LOD;
+        var LOD = _ref$LOD === undefined ? 1 : _ref$LOD;
+        var _ref$maxLOD = _ref.maxLOD;
+        var maxLOD = _ref$maxLOD === undefined ? 4 : _ref$maxLOD;
+
         _classCallCheck(this, TerrainMesh);
 
         var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(TerrainMesh).call(this));
 
         _this2.width = width;
         _this2.height = height;
-        _this2.maxLOD = 4;
-        _this2.LOD = 1;
+        _this2.maxLOD = maxLOD;
+        _this2.LOD = LOD;
         return _this2;
     }
 
@@ -4781,32 +4807,79 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
         }
     }, {
         key: 'getHeight',
-        value: function getHeight(x, y) {
-            var smoothedHeightMap = (0, _smooth2.default)(this.heightMap, {
-                scaleTo: this.width,
-                method: _smooth2.default.METHOD_CUBIC
-            });
 
-            var scaled = smoothedHeightMap(x)[y];
-            return scaled;
+        // TODO: Think of optimizations
+        value: function getHeight(x, y) {
+            // Get the ratio of the heightmap dimensions to the mesh dimensions
+            var xratio = this.heightMap.length * (1 / this.width);
+            var yratio = this.heightMap[0].length * (1 / this.height);
+
+            // Get the height coordinates on the heightmap that correspond to the x,y vertex on the mesh
+            // Note: this won't necessarily be an integer, which is why we perform a bilinear interpolation next
+            var heightmapx = x * xratio;
+            var heightmapy = y * yratio;
+
+            // Interpolate the height value for x,y on the heightmap using bilinear interpolation
+            // See: http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
+
+            var x1 = Math.floor(heightmapx);
+            var x2 = Math.ceil(heightmapx);
+            var y1 = Math.floor(heightmapy);
+            var y2 = Math.ceil(heightmapy);
+
+            // The four surrounding pixels to this pixel on the heightmap
+            var q11 = this.heightMap[x1][y1];
+            var q12 = this.heightMap[x1][y2];
+            var q21 = this.heightMap[x2][y1];
+            var q22 = this.heightMap[x2][y2];
+
+            // The bilinear interpolation
+            var r1 = undefined,
+                r2 = undefined,
+                height = null;
+            if (x2 == x1) {
+                r1 = q11;
+                r2 = q12;
+            } else {
+                r1 = (x2 - heightmapx) / (x2 - x1) * q11 + (heightmapx - x1) / (x2 - x1) * q21;
+                r2 = (x2 - heightmapx) / (x2 - x1) * q12 + (heightmapx - x1) / (x2 - x1) * q22;
+            }
+
+            if (y2 == y1) {
+                height = r1;
+            } else {
+                height = (y2 - heightmapy) / (y2 - y1) * r1 + (heightmapy - y1) / (y2 - y1) * r2;
+            }
+
+            return height;
         }
     }, {
-        key: 'randomTerrain',
-        value: function randomTerrain() {
+        key: 'generateTerrain',
+        value: function generateTerrain() {
+            if (!this.heightMap) {
+                return;
+            }
+
+            console.log("Generating terrain..");
+
             var vertexPositions = [];
-
-            this.randomHeightMap();
-
-            for (var i = 0; i < this.width; i = i + this.stride) {
-                for (var j = 0; j < this.height; j = j + this.stride) {
+            for (var i = 0; i < this.width - 1; i = i + this.stride) {
+                for (var j = 0; j < this.height - 1; j = j + this.stride) {
                     //Create two triangles that will generate a square
-                    vertexPositions.push([i, j, this.getHeight(i, j)]);
-                    vertexPositions.push([i + this.stride, j, this.getHeight(i, j)]);
-                    vertexPositions.push([i, j + this.stride, this.getHeight(i, j)]);
 
-                    vertexPositions.push([i + this.stride, j, this.getHeight(i, j)]);
-                    vertexPositions.push([i + this.stride, j + this.stride, this.getHeight(i, j)]);
-                    vertexPositions.push([i, j + this.stride, this.getHeight(i, j)]);
+                    var i0 = i;
+                    var i1 = i + this.stride;
+
+                    var j0 = j;
+                    var j1 = j + this.stride;
+
+                    vertexPositions.push([i0, j0, this.getHeight(i0, j0)]);
+                    vertexPositions.push([i1, j0, this.getHeight(i1, j0)]);
+                    vertexPositions.push([i0, j1, this.getHeight(i0, j1)]);
+
+                    vertexPositions.push([i1, j0, this.getHeight(i1, j0)]);
+                    vertexPositions.push([i1, j1, this.getHeight(i1, j1)]);
+                    vertexPositions.push([i0, j1, this.getHeight(i0, j1)]);
                 }
             }
             this.generateMesh(vertexPositions);
@@ -4816,6 +4889,7 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
         set: function set(level) {
             this._lod = level;
             this.setStride();
+            this.generateTerrain();
         },
         get: function get() {
             return this._lod;
