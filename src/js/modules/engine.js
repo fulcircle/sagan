@@ -1,5 +1,6 @@
 import THREE from '../vendor/three.min.js'
 import { Camera } from '../modules/camera.js'
+import { Mesh } from '../modules/mesh.js'
 
 export class Engine  {
 
@@ -23,25 +24,25 @@ export class Engine  {
         }, false );
     }
 
-    /*
-    mesh:  Mesh object (defined in mesh.js)
-     */
-    addMesh(mesh) {
-        this.scene.add(mesh.mesh);
+    add(object) {
+        if (object instanceof Mesh) {
+            this.scene.add(object.mesh);
+        } else {
+            this.scene.add(object);
+        }
     }
 
-    removeMesh(mesh) {
-        console.log(mesh.mesh);
+    remove(object) {
+        if (object instanceof Mesh) {
+            this.scene.remove(object.mesh);
+        } else {
+            this.scene.remove(object);
+        }
 
-        this.scene.remove(mesh.mesh);
     }
 
     get domElement() {
         return this.renderer.domElement;
-    }
-
-    addWireframe(mesh, color) {
-        this.scene.add(mesh.wireFrame(color));
     }
 
     focus(mesh) {

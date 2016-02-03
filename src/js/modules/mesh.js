@@ -1,22 +1,18 @@
 import THREE from '../vendor/three.min.js'
-import Smooth from "../vendor/smooth.js";
 import { randomNumber, initArray } from './util.js'
 
 // Abstract
 export class Mesh {
 
     constructor() {
+        this._wireframe = null;
         this.material = new THREE.MeshBasicMaterial( { color: 0xff0000 });
     }
 
-    wireFrame(wire_color) {
-        return new THREE.WireframeHelper(this.mesh, wire_color);
+    wireframe(wire_color) {
+        this._wireframe = new THREE.WireframeHelper(this.mesh, wire_color);
+        return this._wireframe;
     }
-
-    get position() {
-        return new THREE.Vector3();
-    }
-
 }
 
 export class TriangleMesh extends Mesh {
@@ -24,9 +20,11 @@ export class TriangleMesh extends Mesh {
     constructor() {
         super();
         this.geometry = new THREE.BufferGeometry();
+        this.material = new THREE.Material();
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
     }
 
-    generateMesh(vertexPositions) {
+    update(vertexPositions) {
 
 
         let vertices = new Float32Array(vertexPositions.length * 3);
@@ -39,10 +37,9 @@ export class TriangleMesh extends Mesh {
         }
 
         this.geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        this.mesh.geometry.attributes.position.needsUpdate = true;
 
         this.geometry.computeBoundingBox();
-
-        this.mesh = new THREE.Mesh(this.geometry, this.material);
     }
 
     get position() {
@@ -61,18 +58,15 @@ export class TerrainMesh extends TriangleMesh {
         this.LOD = LOD;
     }
 
-    randomHeightMap() {
-        let min_height = 0;
-        let max_height = 2;
-
+    setHeightMap(func) {
         this.heightMap = initArray(this.width*this.maxLOD, this.height*this.maxLOD);
-        var random = randomNumber(min_height, max_height);
 
         for (var a = 0; a < this.heightMap.length; a++) {
             for (var b = 0; b < this.heightMap[a].length; b++) {
-                this.heightMap[a][b] = random.next().value;
+                this.heightMap[a][b] = func(a, b);
             }
         }
+
     }
 
     setStride() {
@@ -163,7 +157,7 @@ export class TerrainMesh extends TriangleMesh {
 
             }
         }
-        this.generateMesh(vertexPositions);
+        this.update(vertexPositions);
     }
 
 }
