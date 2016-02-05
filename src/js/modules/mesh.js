@@ -5,13 +5,14 @@ import { randomNumber, initArray } from './util.js'
 export class Mesh {
 
     constructor() {
-        this._wireframe = null;
-        this.material = new THREE.MeshBasicMaterial( { color: 0xff0000 });
     }
 
-    wireframe(wire_color) {
-        this._wireframe = new THREE.WireframeHelper(this.mesh, wire_color);
-        return this._wireframe;
+    set position(pos) {
+        this.mesh.position.set(pos.x, pos.y, pos.z);
+    }
+
+    get position() {
+        return this.mesh.position;
     }
 }
 
@@ -20,8 +21,12 @@ export class TriangleMesh extends Mesh {
     constructor() {
         super();
         this.geometry = new THREE.BufferGeometry();
-        this.material = new THREE.Material();
+        this.material = new THREE.MeshBasicMaterial( { color: 0xffffff });
         this.mesh = new THREE.Mesh(this.geometry, this.material);
+    }
+
+    set wireframe(bool) {
+        this.mesh.material.wireframe = bool;
     }
 
     update(vertexPositions) {
@@ -42,18 +47,18 @@ export class TriangleMesh extends Mesh {
         this.geometry.computeBoundingBox();
     }
 
-    get position() {
-        this.geometry.computeBoundingBox();
-        return this.geometry.boundingBox.center();
-    }
+    //get position() {
+    //    this.geometry.computeBoundingBox();
+    //    return this.geometry.boundingBox.center();
+    //}
 }
 
 export class TerrainMesh extends TriangleMesh {
 
     constructor({width, height, LOD=1, maxLOD=4}) {
         super();
-        this.width = width;
-        this.height = height;
+        this.width = width+1;
+        this.height = height+1;
         this.maxLOD = maxLOD;
         this.LOD = LOD;
     }
@@ -133,8 +138,6 @@ export class TerrainMesh extends TriangleMesh {
         if (!this.heightMap) {
             return;
         }
-
-        console.log("Generating terrain..");
 
         let vertexPositions = [];
         for (var i = 0; i < this.width-1; i = i + this.stride) {

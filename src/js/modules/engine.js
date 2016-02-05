@@ -45,8 +45,8 @@ export class Engine  {
         return this.renderer.domElement;
     }
 
-    focus(mesh) {
-        this.camera.focus(mesh);
+    focus(object) {
+        this.camera.focus(object);
     }
 
     render() {
