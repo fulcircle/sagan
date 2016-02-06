@@ -4545,38 +4545,6 @@ var current_size = {
     y: 0
 };
 
-// Set initial position to draw at the upper left from (0,0) so terrain is centered on the origin
-var initial_position = new _threeMin2.default.Vector3(-(terrain_size.x * 0.5), terrain_size.y * 0.5 - mesh_height, 0);
-var current_position = new _threeMin2.default.Vector3(initial_position.x, initial_position.y, initial_position.z);
-
-while (current_size.y < terrain_size.y) {
-    var mesh = new _mesh.TerrainMesh({ width: mesh_width, height: mesh_height, LOD: 1 });
-
-    mesh.setHeightMap(function (x, y) {
-        return Math.sin(0.1 * x) + Math.sin(0.1 * y) + random.next().value;
-    });
-
-    mesh.generateTerrain();
-    mesh.position.copy(current_position);
-    mesh.wireframe = true;
-    mesh.LOD = 3;
-
-    engine.add(mesh);
-
-    meshes.push(mesh);
-
-    current_size.x += mesh_width;
-
-    if (current_size.x >= terrain_size.x) {
-        current_position.setX(initial_position.x);
-        current_position.setY(current_position.y - mesh_height);
-        current_size.x = 0;
-        current_size.y += mesh_height;
-    } else {
-        current_position.setX(current_position.x + mesh_width);
-    }
-}
-
 //let controls = new Controls();
 //controls.addControl(mesh, 'LOD').min(1).max(4)
 //    .onChange((newLOD) => {
@@ -4757,7 +4725,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.TerrainMesh = exports.TriangleMesh = exports.Mesh = undefined;
+exports.QuadMesh = exports.TerrainMesh = exports.TriangleMesh = exports.Mesh = undefined;
 
 var _threeMin = require('../vendor/three.min.js');
 
@@ -4834,6 +4802,11 @@ var TriangleMesh = exports.TriangleMesh = function (_Mesh) {
         key: 'wireframe',
         set: function set(bool) {
             this.mesh.material.wireframe = bool;
+        }
+    }, {
+        key: 'boundingBox',
+        get: function get() {
+            return this.geometry.boundingBox;
         }
     }]);
 
@@ -4970,6 +4943,48 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
 
     return TerrainMesh;
 }(TriangleMesh);
+
+var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
+    _inherits(QuadMesh, _TerrainMesh);
+
+    function QuadMesh(_ref2) {
+        var width = _ref2.width;
+        var height = _ref2.height;
+        var _ref2$LOD = _ref2.LOD;
+        var LOD = _ref2$LOD === undefined ? 1 : _ref2$LOD;
+        var _ref2$maxLOD = _ref2.maxLOD;
+        var maxLOD = _ref2$maxLOD === undefined ? 4 : _ref2$maxLOD;
+        var _ref2$coordinates = _ref2.coordinates;
+        var coordinates = _ref2$coordinates === undefined ? new _threeMin2.default.Vector3() : _ref2$coordinates;
+
+        _classCallCheck(this, QuadMesh);
+
+        var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(QuadMesh).call(this, { width: width, height: height, LOD: LOD, maxLOD: maxLOD }));
+
+        _this3.children = [];
+        _this3.coordinates = coordinates;
+        return _this3;
+    }
+
+    _createClass(QuadMesh, [{
+        key: 'coordinates',
+        set: function set(pos) {
+            this.geometry.computeBoundingBox();
+            var depth = this.geometry.boundingBox.max.z - this.geometry.boundingBox.min.z;
+            this._coordinates = {
+                x: pos.x - this.width * 0.5,
+                y: pos.y + this.height * 0.5,
+                z: pos.z - depth * 0.5
+            };
+            this.geometry.position.set(this._coordinates.x, this._coordinates.y, this._coordinates.z);
+        },
+        get: function get() {
+            return this._coordinates;
+        }
+    }]);
+
+    return QuadMesh;
+}(TerrainMesh);
 
 },{"../vendor/three.min.js":198,"./util.js":196}],196:[function(require,module,exports){
 "use strict";

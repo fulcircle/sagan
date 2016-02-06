@@ -29,6 +29,11 @@ export class TriangleMesh extends Mesh {
         this.mesh.material.wireframe = bool;
     }
 
+
+    get boundingBox() {
+        return this.geometry.boundingBox;
+    }
+
     update(vertexPositions) {
 
 
@@ -162,5 +167,31 @@ export class TerrainMesh extends TriangleMesh {
         }
         this.update(vertexPositions);
     }
+
+}
+
+export class QuadMesh extends TerrainMesh {
+
+    constructor({width, height, LOD=1, maxLOD=4, coordinates=new THREE.Vector3()}) {
+        super({width, height, LOD, maxLOD});
+        this.children = [];
+        this.coordinates = coordinates;
+    }
+
+    set coordinates(pos) {
+        this.geometry.computeBoundingBox();
+        let depth = this.geometry.boundingBox.max.z - this.geometry.boundingBox.min.z;
+        this._coordinates = {
+            x: pos.x - this.width * 0.5,
+            y: pos.y + this.height * 0.5,
+            z: pos.z - depth * 0.5
+        };
+        this.geometry.position.set(this._coordinates.x, this._coordinates.y, this._coordinates.z);
+    }
+
+    get coordinates() {
+        return this._coordinates;
+    }
+
 
 }
