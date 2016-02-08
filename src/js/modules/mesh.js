@@ -62,14 +62,17 @@ export class TerrainMesh extends TriangleMesh {
 
     constructor({width, height, LOD=1, maxLOD=4}) {
         super();
-        this.width = width+1;
-        this.height = height+1;
+        this.width = width;
+        this.height = height;
         this.maxLOD = maxLOD;
+        // Add 1 to width and height because in order to interpolate, we need one extra data point beyond the edge of the mesh
+        this.heightMapWidth = width + 1;
+        this.heightMapHeight = height + 1;
         this.LOD = LOD;
     }
 
     setHeightMap(func) {
-        this.heightMap = initArray(this.width*this.maxLOD, this.height*this.maxLOD);
+        this.heightMap = initArray((this.heightMapWidth)*this.maxLOD, (this.heightMapHeight)*this.maxLOD);
 
         for (var a = 0; a < this.heightMap.length; a++) {
             for (var b = 0; b < this.heightMap[a].length; b++) {
@@ -97,8 +100,8 @@ export class TerrainMesh extends TriangleMesh {
     // TODO: Think of optimizations
     getHeight(x, y) {
         // Get the ratio of the heightmap dimensions to the mesh dimensions
-        let xratio = this.heightMap.length * ( 1 / this.width );
-        let yratio = this.heightMap[0].length * (1 / this.height );
+        let xratio = this.heightMap.length * ( 1 / (this.heightMapWidth) );
+        let yratio = this.heightMap[0].length * (1 / (this.heightMapHeight) );
 
         // Get the height coordinates on the heightmap that correspond to the x,y vertex on the mesh
         // Note: this won't necessarily be an integer, which is why we perform a bilinear interpolation next
@@ -145,8 +148,8 @@ export class TerrainMesh extends TriangleMesh {
         }
 
         let vertexPositions = [];
-        for (var i = 0; i < this.width-1; i = i + this.stride) {
-            for (var j = 0; j < this.height-1; j = j + this.stride) {
+        for (var i = 0; i < this.width; i = i + this.stride) {
+            for (var j = 0; j < this.height; j = j + this.stride) {
                 //Create two triangles that will generate a square
 
                 let i0 = i;
@@ -172,21 +175,17 @@ export class TerrainMesh extends TriangleMesh {
 
 export class QuadMesh extends TerrainMesh {
 
-    constructor({width, height, LOD=1, maxLOD=4, coordinates=new THREE.Vector3()}) {
+    constructor({width, height, LOD=1, maxLOD=4}) {
         super({width, height, LOD, maxLOD});
         this.children = [];
-        this.coordinates = coordinates;
     }
 
+    // Coordinates specify upper left location of mesh if looking at mesh from straight down z-axis
     set coordinates(pos) {
         this.geometry.computeBoundingBox();
-        let depth = this.geometry.boundingBox.max.z - this.geometry.boundingBox.min.z;
-        this._coordinates = {
-            x: pos.x - this.width * 0.5,
-            y: pos.y + this.height * 0.5,
-            z: pos.z - depth * 0.5
-        };
-        this.geometry.position.set(this._coordinates.x, this._coordinates.y, this._coordinates.z);
+        let depth = this.geometry.boundingBox.max.z;
+        this.position = new THREE.Vector3(pos.x, pos.y - this.height, pos.z - depth * 0.5);
+        this._coordinates = pos;
     }
 
     get coordinates() {

@@ -4528,22 +4528,58 @@ var engine = new _engine.Engine(document.body);
 
 document.body.appendChild(engine.domElement);
 
-var meshes = [];
-
 var random = (0, _util.randomNumber)(0, 0.3);
 
-var mesh_width = 16;
-var mesh_height = 16;
+var quad = new _mesh.QuadMesh({ width: 32, height: 32, LOD: 1 });
 
-var terrain_size = {
-    x: 128,
-    y: 128
-};
+quad.setHeightMap(function (x, y) {
+    return Math.sin(0.1 * x) + Math.sin(0.1 * y) + random.next().value;
+});
 
-var current_size = {
-    x: 0,
-    y: 0
-};
+quad.generateTerrain();
+quad.coordinates = new _threeMin2.default.Vector3(-16, 16, 0);
+generateQuadTree(quad);
+
+function generateQuadTree(parent_quad) {
+    if (parent_quad.LOD > 4) {
+        return;
+    }
+    var currX = parent_quad.coordinates.x;
+    var currY = parent_quad.coordinates.y;
+    var currZ = parent_quad.coordinates.z;
+
+    var xstride = parent_quad.width * 0.5;
+    var ystride = parent_quad.height * 0.5;
+
+    var LOD = parent_quad.LOD + 1;
+
+    for (var i = 0; i < 4; i++) {
+        var _quad = new _mesh.QuadMesh({
+            width: parent_quad.width * 0.5,
+            height: parent_quad.height * 0.5,
+            LOD: LOD
+        });
+        _quad.setHeightMap(function (x, y) {
+            return Math.sin(0.1 * x) + Math.sin(0.1 * y) + random.next().value;
+        });
+
+        _quad.wireframe = true;
+        _quad.generateTerrain();
+
+        _quad.coordinates = new _threeMin2.default.Vector3(currX, currY, currZ);
+
+        parent_quad.children.push(_quad);
+
+        engine.add(_quad);
+
+        currX = currX + xstride;
+        if (currX - parent_quad.coordinates.x >= parent_quad.width) {
+            currX = parent_quad.coordinates.x;
+            currY = currY - ystride;
+        }
+        generateQuadTree(_quad);
+    }
+}
 
 //let controls = new Controls();
 //controls.addControl(mesh, 'LOD').min(1).max(4)
@@ -4828,9 +4864,12 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
 
         var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(TerrainMesh).call(this));
 
-        _this2.width = width + 1;
-        _this2.height = height + 1;
+        _this2.width = width;
+        _this2.height = height;
         _this2.maxLOD = maxLOD;
+        // Add 1 to width and height because in order to interpolate, we need one extra data point beyond the edge of the mesh
+        _this2.heightMapWidth = width + 1;
+        _this2.heightMapHeight = height + 1;
         _this2.LOD = LOD;
         return _this2;
     }
@@ -4838,7 +4877,7 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
     _createClass(TerrainMesh, [{
         key: 'setHeightMap',
         value: function setHeightMap(func) {
-            this.heightMap = (0, _util.initArray)(this.width * this.maxLOD, this.height * this.maxLOD);
+            this.heightMap = (0, _util.initArray)(this.heightMapWidth * this.maxLOD, this.heightMapHeight * this.maxLOD);
 
             for (var a = 0; a < this.heightMap.length; a++) {
                 for (var b = 0; b < this.heightMap[a].length; b++) {
@@ -4858,8 +4897,8 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
         // TODO: Think of optimizations
         value: function getHeight(x, y) {
             // Get the ratio of the heightmap dimensions to the mesh dimensions
-            var xratio = this.heightMap.length * (1 / this.width);
-            var yratio = this.heightMap[0].length * (1 / this.height);
+            var xratio = this.heightMap.length * (1 / this.heightMapWidth);
+            var yratio = this.heightMap[0].length * (1 / this.heightMapHeight);
 
             // Get the height coordinates on the heightmap that correspond to the x,y vertex on the mesh
             // Note: this won't necessarily be an integer, which is why we perform a bilinear interpolation next
@@ -4908,8 +4947,8 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
             }
 
             var vertexPositions = [];
-            for (var i = 0; i < this.width - 1; i = i + this.stride) {
-                for (var j = 0; j < this.height - 1; j = j + this.stride) {
+            for (var i = 0; i < this.width; i = i + this.stride) {
+                for (var j = 0; j < this.height; j = j + this.stride) {
                     //Create two triangles that will generate a square
 
                     var i0 = i;
@@ -4954,29 +4993,24 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
         var LOD = _ref2$LOD === undefined ? 1 : _ref2$LOD;
         var _ref2$maxLOD = _ref2.maxLOD;
         var maxLOD = _ref2$maxLOD === undefined ? 4 : _ref2$maxLOD;
-        var _ref2$coordinates = _ref2.coordinates;
-        var coordinates = _ref2$coordinates === undefined ? new _threeMin2.default.Vector3() : _ref2$coordinates;
 
         _classCallCheck(this, QuadMesh);
 
         var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(QuadMesh).call(this, { width: width, height: height, LOD: LOD, maxLOD: maxLOD }));
 
         _this3.children = [];
-        _this3.coordinates = coordinates;
         return _this3;
     }
+
+    // Coordinates specify upper left location of mesh if looking at mesh from straight down z-axis
 
     _createClass(QuadMesh, [{
         key: 'coordinates',
         set: function set(pos) {
             this.geometry.computeBoundingBox();
-            var depth = this.geometry.boundingBox.max.z - this.geometry.boundingBox.min.z;
-            this._coordinates = {
-                x: pos.x - this.width * 0.5,
-                y: pos.y + this.height * 0.5,
-                z: pos.z - depth * 0.5
-            };
-            this.geometry.position.set(this._coordinates.x, this._coordinates.y, this._coordinates.z);
+            var depth = this.geometry.boundingBox.max.z;
+            this.position = new _threeMin2.default.Vector3(pos.x, pos.y - this.height, pos.z - depth * 0.5);
+            this._coordinates = pos;
         },
         get: function get() {
             return this._coordinates;
