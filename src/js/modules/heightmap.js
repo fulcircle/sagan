@@ -1,7 +1,7 @@
 export class HeightMap {
 
     constructor(width, height) {
-        this.map = 
+        this.map =
     }
 
     getHeight(x, y) {
