@@ -12,7 +12,6 @@ export class Engine  {
         this.renderer.setSize(this.container.offsetWidth, this.container.offsetHeight);
 
         this.camera = new Camera(this.container);
-        this.camera.position.z = 5;
 
         window.addEventListener( 'resize', () => {
 
@@ -43,10 +42,6 @@ export class Engine  {
 
     get domElement() {
         return this.renderer.domElement;
-    }
-
-    focus(object) {
-        this.camera.focus(object);
     }
 
     render() {

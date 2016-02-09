@@ -1,5 +1,6 @@
 import THREE from '../vendor/three.min.js'
-import { randomNumber, initArray } from './util.js'
+import { HeightMap } from './heightmap.js'
+import { randomNumber } from './util.js'
 
 // Abstract
 export class Mesh {
@@ -60,27 +61,25 @@ export class TriangleMesh extends Mesh {
 
 export class TerrainMesh extends TriangleMesh {
 
-    constructor({width, height, LOD=1, maxLOD=4}) {
+    constructor({width, height, heightMap=null, LOD=1, maxLOD=4}) {
         super();
         this.width = width;
         this.height = height;
         this.maxLOD = maxLOD;
-        // Add 1 to width and height because in order to interpolate, we need one extra data point beyond the edge of the mesh
-        this.heightMapWidth = width + 1;
-        this.heightMapHeight = height + 1;
         this.LOD = LOD;
+
+        this.heightMap = heightMap;
+
     }
 
-    setHeightMap(func) {
-        this.heightMap = initArray((this.heightMapWidth)*this.maxLOD, (this.heightMapHeight)*this.maxLOD);
-
-        for (var a = 0; a < this.heightMap.length; a++) {
-            for (var b = 0; b < this.heightMap[a].length; b++) {
-                this.heightMap[a][b] = func(a, b);
-            }
+    getHeight(x, y) {
+        if (!this.heightMap) {
+            return 0;
+        } else {
+            return this.heightMap.getHeight(x, y);
         }
-
     }
+
 
     setStride() {
         let tris = this.width*this.LOD;
@@ -90,66 +89,23 @@ export class TerrainMesh extends TriangleMesh {
     set LOD(level) {
         this._lod = level;
         this.setStride();
-        this.generateTerrain();
+        this.generate();
     }
 
     get LOD() {
         return this._lod;
     }
 
-    // TODO: Think of optimizations
-    getHeight(x, y) {
-        // Get the ratio of the heightmap dimensions to the mesh dimensions
-        let xratio = this.heightMap.length * ( 1 / (this.heightMapWidth) );
-        let yratio = this.heightMap[0].length * (1 / (this.heightMapHeight) );
-
-        // Get the height coordinates on the heightmap that correspond to the x,y vertex on the mesh
-        // Note: this won't necessarily be an integer, which is why we perform a bilinear interpolation next
-        let heightmapx = x*xratio;
-        let heightmapy = y*yratio;
-
-        // Interpolate the height value for x,y on the heightmap using bilinear interpolation
-        // See: http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
-
-        let x1 = Math.floor(heightmapx);
-        let x2 = Math.ceil(heightmapx);
-        let y1 = Math.floor(heightmapy);
-        let y2 = Math.ceil(heightmapy);
-
-        // The four surrounding pixels to this pixel on the heightmap
-        let q11 = this.heightMap[x1][y1];
-        let q12 = this.heightMap[x1][y2];
-        let q21 = this.heightMap[x2][y1];
-        let q22 = this.heightMap[x2][y2];
-
-        // The bilinear interpolation
-        let r1, r2, height = null;
-        if (x2 == x1) {
-            r1 = q11;
-            r2 = q12;
-        } else {
-            r1 = ((x2 - heightmapx)/(x2 - x1))*q11 + ((heightmapx - x1)/(x2 - x1))*q21;
-            r2 = ((x2 - heightmapx)/(x2 - x1))*q12 + ((heightmapx - x1)/(x2 - x1))*q22;
-        }
-
-        if (y2 == y1) {
-            height = r1;
-        } else {
-            height = ((y2 - heightmapy)/(y2 - y1))*r1 + ((heightmapy - y1)/(y2 - y1))*r2;
-        }
-
-
-        return height;
-    }
-
-    generateTerrain() {
-        if (!this.heightMap) {
-            return;
-        }
+    generate() {
 
         let vertexPositions = [];
-        for (var i = 0; i < this.width; i = i + this.stride) {
-            for (var j = 0; j < this.height; j = j + this.stride) {
+        let startx = this.position.x;
+        let endx = startx + this.width;
+
+        let starty = this.position.y;
+        let endy = starty + this.height;
+        for (var i = startx; i < endx; i = i + this.stride) {
+            for (var j = starty; j < endy; j = j + this.stride) {
                 //Create two triangles that will generate a square
 
                 let i0 = i;
@@ -175,8 +131,8 @@ export class TerrainMesh extends TriangleMesh {
 
 export class QuadMesh extends TerrainMesh {
 
-    constructor({width, height, LOD=1, maxLOD=4}) {
-        super({width, height, LOD, maxLOD});
+    constructor({width, height, heightMap, LOD=1, maxLOD=4}) {
+        super({width, height, heightMap, LOD, maxLOD});
         this.children = [];
     }
 

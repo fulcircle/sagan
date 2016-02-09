@@ -15,8 +15,16 @@ export class Camera {
         return this._camera.position;
     }
 
+    set position(vec3) {
+        this._camera.position.set(vec3.x, vec3.y, vec3.z);
+    }
+
     focus(object) {
-        this.orbit.target.copy(object.position);
+        if (object instanceof THREE.Vector3) {
+            this.orbit.target.copy(object);
+        } else {
+            this.orbit.target.copy(object.position);
+        }
         this.orbit.update();
     }
 
