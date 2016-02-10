@@ -21,6 +21,10 @@ export class Engine  {
             this.renderer.setSize( this.container.offsetWidth, this.container.offsetHeight );
 
         }, false );
+
+        // Our quadtrees for terrain LOD
+        this.quads = [];
+
     }
 
     add(object) {
@@ -40,12 +44,71 @@ export class Engine  {
 
     }
 
+    addQuadTree(quadRoot) {
+
+        let quadDict = {
+            root: quadRoot,
+            quads: []
+        };
+
+        let queue = [quadRoot];
+        while (queue.length > 0) {
+            let q = queue.shift();
+
+            quadDict.quads.push(q);
+            q.visible = false;
+            this.add(q);
+            q._isLeaf = !q.children;
+            queue.push(...q.children);
+        }
+
+        this.quads.push(quadDict);
+    }
+
     get domElement() {
         return this.renderer.domElement;
     }
 
+    drawQuads() {
+        for (let q of this.quads) {
+            q.quads.forEach((q) => {
+                q.visible = false;
+            });
+            this.chunkedLOD(q.root)
+        }
+    }
+
+    // Chunked LOD implementation: http://tulrich.com/geekstuff/sig-notes.pdf
+    // TODO: Optimizations
+    // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
+    // Breadth-first search of quadtree?
+    chunkedLOD(quad) {
+        let distance = this.camera.getDistanceTo(quad);
+        let rho = quad.error / distance;
+        rho = Math.round(rho * 1000) / 1000;
+
+        // distance = 0 so screenspace error should be 0
+        if (!isFinite(rho)) {
+            rho = 0;
+        }
+        // Largest allowable screen error
+        let tau = 0.2;
+
+        if (quad._isLeaf || rho <= tau) {
+            console.log(rho, quad.LOD);
+            quad.visible = true;
+        } else {
+            // TODO: When we implement excluding of whole subbranches, we'll have to turn off visibility for all chunks in that branch
+            for (let c of quad.children) {
+                this.chunkedLOD(c);
+            }
+        }
+    }
+
     render() {
         requestAnimationFrame(this.render.bind(this));
+        // TODO: Drawing quads on each render call is inefficient.  Only draw quads on camera move.
+        this.drawQuads();
         this.renderer.render(this.scene, this.camera._camera);
 
     }

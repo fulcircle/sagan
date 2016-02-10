@@ -20,21 +20,25 @@ let TERRAIN_WIDTH = 32;
 // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
 let heightMap = new HeightMap(TERRAIN_WIDTH + 1, TERRAIN_HEIGHT + 1, heightMapFunc);
 
-let quad = new QuadMesh({height: TERRAIN_HEIGHT, width: TERRAIN_WIDTH, LOD: 0.25, heightMap: heightMap});
+let quad = new QuadMesh({
+    height: TERRAIN_HEIGHT,
+    width: TERRAIN_WIDTH,
+    LOD: 1,
+    heightMap: heightMap,
+    error: 8
+});
 
 quad.position = new THREE.Vector3();
 quad.wireframe = true;
 
-let controls = new Controls();
-controls.addControl(quad, 'LOD').min(.25).max(4).step(.25);
+//let controls = new Controls();
+//controls.addControl(quad, 'LOD').min(1).max(4).step(1);
 
-engine.add(quad);
-
-//generateQuadTree(quad);
+generateQuadTree(quad);
 
 // TODO: Convert into breadth-first generation of tree
 function generateQuadTree(parent_quad) {
-    if (parent_quad.LOD > 2) {
+    if (parent_quad.LOD > 4) {
         return;
     }
     let currX = parent_quad.position.x;
@@ -51,7 +55,8 @@ function generateQuadTree(parent_quad) {
             width: parent_quad.width * 0.5,
             height: parent_quad.height * 0.5,
             LOD: LOD,
-            heightMap: parent_quad.heightMap
+            heightMap: parent_quad.heightMap,
+            error: parent_quad.error * 0.5
         });
 
         quad.wireframe = true;
@@ -59,8 +64,6 @@ function generateQuadTree(parent_quad) {
         quad.position = new THREE.Vector3(currX, currY, currZ);
 
         parent_quad.children.push(quad);
-
-        engine.add(quad);
 
         currX = currX + xstride;
         if ((currX - parent_quad.position.x) >= parent_quad.width) {
@@ -71,9 +74,10 @@ function generateQuadTree(parent_quad) {
     }
 }
 
+engine.addQuadTree(quad);
+engine.drawQuads();
 
-
-engine.camera.position = new THREE.Vector3(TERRAIN_WIDTH/2, TERRAIN_HEIGHT/2, 5);
+engine.camera.position = new THREE.Vector3(TERRAIN_WIDTH/2, TERRAIN_HEIGHT/2, 20);
 engine.camera.focus(new THREE.Vector3(TERRAIN_WIDTH/2, TERRAIN_HEIGHT/2, 0));
 engine.render();
 

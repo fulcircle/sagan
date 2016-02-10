@@ -4540,21 +4540,25 @@ var TERRAIN_WIDTH = 32;
 // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
 var heightMap = new _heightmap.HeightMap(TERRAIN_WIDTH + 1, TERRAIN_HEIGHT + 1, heightMapFunc);
 
-var quad = new _mesh.QuadMesh({ height: TERRAIN_HEIGHT, width: TERRAIN_WIDTH, LOD: 0.25, heightMap: heightMap });
+var quad = new _mesh.QuadMesh({
+    height: TERRAIN_HEIGHT,
+    width: TERRAIN_WIDTH,
+    LOD: 1,
+    heightMap: heightMap,
+    error: 8
+});
 
 quad.position = new _threeMin2.default.Vector3();
 quad.wireframe = true;
 
-var controls = new _controls.Controls();
-controls.addControl(quad, 'LOD').min(.25).max(4).step(.25);
+//let controls = new Controls();
+//controls.addControl(quad, 'LOD').min(1).max(4).step(1);
 
-engine.add(quad);
-
-//generateQuadTree(quad);
+generateQuadTree(quad);
 
 // TODO: Convert into breadth-first generation of tree
 function generateQuadTree(parent_quad) {
-    if (parent_quad.LOD > 2) {
+    if (parent_quad.LOD > 4) {
         return;
     }
     var currX = parent_quad.position.x;
@@ -4571,7 +4575,8 @@ function generateQuadTree(parent_quad) {
             width: parent_quad.width * 0.5,
             height: parent_quad.height * 0.5,
             LOD: LOD,
-            heightMap: parent_quad.heightMap
+            heightMap: parent_quad.heightMap,
+            error: parent_quad.error * 0.5
         });
 
         _quad.wireframe = true;
@@ -4579,8 +4584,6 @@ function generateQuadTree(parent_quad) {
         _quad.position = new _threeMin2.default.Vector3(currX, currY, currZ);
 
         parent_quad.children.push(_quad);
-
-        engine.add(_quad);
 
         currX = currX + xstride;
         if (currX - parent_quad.position.x >= parent_quad.width) {
@@ -4591,7 +4594,10 @@ function generateQuadTree(parent_quad) {
     }
 }
 
-engine.camera.position = new _threeMin2.default.Vector3(TERRAIN_WIDTH / 2, TERRAIN_HEIGHT / 2, 5);
+engine.addQuadTree(quad);
+engine.drawQuads();
+
+engine.camera.position = new _threeMin2.default.Vector3(TERRAIN_WIDTH / 2, TERRAIN_HEIGHT / 2, 20);
 engine.camera.focus(new _threeMin2.default.Vector3(TERRAIN_WIDTH / 2, TERRAIN_HEIGHT / 2, 0));
 engine.render();
 
@@ -4636,6 +4642,15 @@ var Camera = exports.Camera = function () {
                 this.orbit.target.copy(object.position);
             }
             this.orbit.update();
+        }
+    }, {
+        key: 'getDistanceTo',
+        value: function getDistanceTo(object) {
+            if (object instanceof _threeMin2.default.Vector3) {
+                return this.position.distanceTo(object);
+            } else {
+                return this.position.distanceTo(object.position);
+            }
         }
     }, {
         key: 'position',
@@ -4701,6 +4716,8 @@ var _mesh = require('../modules/mesh.js');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Engine = exports.Engine = function () {
@@ -4724,6 +4741,9 @@ var Engine = exports.Engine = function () {
 
             _this.renderer.setSize(_this.container.offsetWidth, _this.container.offsetHeight);
         }, false);
+
+        // Our quadtrees for terrain LOD
+        this.quads = [];
     }
 
     _createClass(Engine, [{
@@ -4745,9 +4765,115 @@ var Engine = exports.Engine = function () {
             }
         }
     }, {
+        key: 'addQuadTree',
+        value: function addQuadTree(quadRoot) {
+
+            var quadDict = {
+                root: quadRoot,
+                quads: []
+            };
+
+            var queue = [quadRoot];
+            while (queue.length > 0) {
+                var q = queue.shift();
+
+                quadDict.quads.push(q);
+                q.visible = false;
+                this.add(q);
+                q._isLeaf = !q.children;
+                queue.push.apply(queue, _toConsumableArray(q.children));
+            }
+
+            this.quads.push(quadDict);
+        }
+    }, {
+        key: 'drawQuads',
+        value: function drawQuads() {
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = this.quads[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var q = _step.value;
+
+                    q.quads.forEach(function (q) {
+                        q.visible = false;
+                    });
+                    this.chunkedLOD(q.root);
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+        }
+
+        // Chunked LOD implementation: http://tulrich.com/geekstuff/sig-notes.pdf
+        // TODO: Optimizations
+        // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
+        // Breadth-first search of quadtree?
+
+    }, {
+        key: 'chunkedLOD',
+        value: function chunkedLOD(quad) {
+            var distance = this.camera.getDistanceTo(quad);
+            var rho = quad.error / distance;
+            rho = Math.round(rho * 1000) / 1000;
+
+            // distance = 0 so screenspace error should be 0
+            if (!isFinite(rho)) {
+                rho = 0;
+            }
+            // Largest allowable screen error
+            var tau = 0.2;
+
+            if (quad._isLeaf || rho <= tau) {
+                console.log(rho, quad.LOD);
+                quad.visible = true;
+            } else {
+                // TODO: When we implement excluding of whole subbranches, we'll have to turn off visibility for all chunks in that branch
+                var _iteratorNormalCompletion2 = true;
+                var _didIteratorError2 = false;
+                var _iteratorError2 = undefined;
+
+                try {
+                    for (var _iterator2 = quad.children[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                        var c = _step2.value;
+
+                        this.chunkedLOD(c);
+                    }
+                } catch (err) {
+                    _didIteratorError2 = true;
+                    _iteratorError2 = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                            _iterator2.return();
+                        }
+                    } finally {
+                        if (_didIteratorError2) {
+                            throw _iteratorError2;
+                        }
+                    }
+                }
+            }
+        }
+    }, {
         key: 'render',
         value: function render() {
             requestAnimationFrame(this.render.bind(this));
+            // TODO: Drawing quads on each render call is inefficient.  Only draw quads on camera move.
+            this.drawQuads();
             this.renderer.render(this.scene, this.camera._camera);
         }
     }, {
@@ -4885,6 +5011,16 @@ var Mesh = exports.Mesh = function () {
         get: function get() {
             return this.mesh.position;
         }
+    }, {
+        key: 'visibile',
+        get: function get() {
+            return this.mesh.visible;
+        }
+    }, {
+        key: 'visible',
+        set: function set(bool) {
+            this.mesh.visible = bool;
+        }
     }]);
 
     return Mesh;
@@ -4901,6 +5037,7 @@ var TriangleMesh = exports.TriangleMesh = function (_Mesh) {
         _this.geometry = new _threeMin2.default.BufferGeometry();
         _this.material = new _threeMin2.default.MeshBasicMaterial({ color: 0xffffff });
         _this.mesh = new _threeMin2.default.Mesh(_this.geometry, _this.material);
+        _this.center = new _threeMin2.default.Vector3();
         return _this;
     }
 
@@ -4928,6 +5065,8 @@ var TriangleMesh = exports.TriangleMesh = function (_Mesh) {
             this.mesh.needsUpdate = true;
 
             this.geometry.computeBoundingBox();
+
+            this.center = this.geometry.boundingBox.center();
         }
     }, {
         key: 'wireframe',
@@ -4979,6 +5118,7 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
             if (!this.heightMap) {
                 return 0;
             } else {
+                return 0;
                 return this.heightMap.getHeight(x, y);
             }
         }
@@ -4988,8 +5128,8 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
 
             var vertexPositions = [];
 
-            for (var i = 0; i < this.width - 1; i = i + this.stride) {
-                for (var j = 0; j < this.height - 1; j = j + this.stride) {
+            for (var i = 0; i <= this.width - this.stride; i = i + this.stride) {
+                for (var j = 0; j <= this.height - this.stride; j = j + this.stride) {
                     //Create two triangles that will generate a square
 
                     var i0 = i;
@@ -5036,11 +5176,14 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
         var LOD = _ref2$LOD === undefined ? 1 : _ref2$LOD;
         var _ref2$maxLOD = _ref2.maxLOD;
         var maxLOD = _ref2$maxLOD === undefined ? 4 : _ref2$maxLOD;
+        var _ref2$error = _ref2.error;
+        var error = _ref2$error === undefined ? 0 : _ref2$error;
 
         _classCallCheck(this, QuadMesh);
 
         var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(QuadMesh).call(this, { width: width, height: height, heightMap: heightMap, LOD: LOD, maxLOD: maxLOD }));
 
+        _this3.error = error;
         _this3.children = [];
         return _this3;
     }

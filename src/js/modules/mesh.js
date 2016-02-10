@@ -5,15 +5,20 @@ import { randomNumber } from './util.js'
 // Abstract
 export class Mesh {
 
-    constructor() {
-    }
-
     set position(pos) {
         this.mesh.position.set(pos.x, pos.y, pos.z);
     }
 
     get position() {
         return this.mesh.position;
+    }
+
+    get visibile() {
+        return this.mesh.visible;
+    }
+
+    set visible(bool) {
+        this.mesh.visible = bool;
     }
 }
 
@@ -24,6 +29,7 @@ export class TriangleMesh extends Mesh {
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.MeshBasicMaterial( { color: 0xffffff });
         this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.center = new THREE.Vector3();
     }
 
     set wireframe(bool) {
@@ -58,6 +64,8 @@ export class TriangleMesh extends Mesh {
 
         this.geometry.computeBoundingBox();
 
+        this.center = this.geometry.boundingBox.center();
+
     }
 }
 
@@ -81,6 +89,7 @@ export class TerrainMesh extends TriangleMesh {
         if (!this.heightMap) {
             return 0;
         } else {
+            return 0;
             return this.heightMap.getHeight(x, y);
         }
     }
@@ -99,8 +108,8 @@ export class TerrainMesh extends TriangleMesh {
 
         let vertexPositions = [];
 
-        for (var i = 0; i < this.width - 1; i = i + this.stride) {
-            for (var j = 0; j < this.height - 1; j = j + this.stride) {
+        for (var i = 0; i <= this.width-this.stride; i = i + this.stride) {
+            for (var j = 0; j <= this.height-this.stride; j = j + this.stride) {
                 //Create two triangles that will generate a square
 
                 let i0 = i;
@@ -127,8 +136,9 @@ export class TerrainMesh extends TriangleMesh {
 
 export class QuadMesh extends TerrainMesh {
 
-    constructor({width, height, heightMap, LOD=1, maxLOD=4}) {
+    constructor({width, height, heightMap, LOD=1, maxLOD=4, error=0}) {
         super({width, height, heightMap, LOD, maxLOD});
+        this.error = error;
         this.children = [];
     }
 
