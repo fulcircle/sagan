@@ -36,28 +36,29 @@ export class TriangleMesh extends Mesh {
     }
 
     update(vertexPositions) {
-        console.log("update called");
 
         let vertices = new Float32Array(vertexPositions.length * 3);
 
-        for ( var i = 0; i < vertexPositions.length; i++ )
-        {
-            vertices[ i*3 + 0 ] = vertexPositions[i][0];
-            vertices[ i*3 + 1 ] = vertexPositions[i][1];
-            vertices[ i*3 + 2 ] = vertexPositions[i][2];
+        for (var i = 0; i < vertexPositions.length; i++) {
+            vertices[i * 3 + 0] = vertexPositions[i][0];
+            vertices[i * 3 + 1] = vertexPositions[i][1];
+            vertices[i * 3 + 2] = vertexPositions[i][2];
         }
 
-        this.geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
-        this.mesh.geometry.attributes.position.needsUpdate = true;
+        // We can't change the number of vertices on a geometry, so we create a new geometry
+        let updatedGeom = new THREE.BufferGeometry();
+        updatedGeom.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
 
-        //this.geometry.computeBoundingBox();
+        // Kill old geometry and update our reference to new one
+        this.geometry.dispose();
+        this.geometry = updatedGeom;
+
+        this.mesh.geometry = updatedGeom;
+        this.mesh.needsUpdate = true;
+
+        this.geometry.computeBoundingBox();
 
     }
-
-    //get position() {
-    //    this.geometry.computeBoundingBox();
-    //    return this.geometry.boundingBox.center();
-    //}
 }
 
 export class TerrainMesh extends TriangleMesh {
@@ -84,14 +85,9 @@ export class TerrainMesh extends TriangleMesh {
         }
     }
 
-
-    setStride() {
-        this.stride = 1 / this.LOD;
-    }
-
     set LOD(level) {
         this._lod = level;
-        this.setStride();
+        this.stride = 1 / this.LOD;
         this.generate();
     }
 

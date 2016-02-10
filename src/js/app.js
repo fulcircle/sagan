@@ -20,13 +20,13 @@ let TERRAIN_WIDTH = 32;
 // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
 let heightMap = new HeightMap(TERRAIN_WIDTH + 1, TERRAIN_HEIGHT + 1, heightMapFunc);
 
-let quad = new QuadMesh({height: TERRAIN_HEIGHT, width: TERRAIN_WIDTH, LOD: 1, heightMap: heightMap});
+let quad = new QuadMesh({height: TERRAIN_HEIGHT, width: TERRAIN_WIDTH, LOD: 0.25, heightMap: heightMap});
 
 quad.position = new THREE.Vector3();
 quad.wireframe = true;
 
 let controls = new Controls();
-controls.addControl(quad, 'LOD').min(1).max(4);
+controls.addControl(quad, 'LOD').min(.25).max(4).step(.25);
 
 engine.add(quad);
 

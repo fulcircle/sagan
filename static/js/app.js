@@ -4540,13 +4540,13 @@ var TERRAIN_WIDTH = 32;
 // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
 var heightMap = new _heightmap.HeightMap(TERRAIN_WIDTH + 1, TERRAIN_HEIGHT + 1, heightMapFunc);
 
-var quad = new _mesh.QuadMesh({ height: TERRAIN_HEIGHT, width: TERRAIN_WIDTH, LOD: 1, heightMap: heightMap });
+var quad = new _mesh.QuadMesh({ height: TERRAIN_HEIGHT, width: TERRAIN_WIDTH, LOD: 0.25, heightMap: heightMap });
 
 quad.position = new _threeMin2.default.Vector3();
 quad.wireframe = true;
 
 var controls = new _controls.Controls();
-controls.addControl(quad, 'LOD').min(1).max(4);
+controls.addControl(quad, 'LOD').min(.25).max(4).step(.25);
 
 engine.add(quad);
 
@@ -4907,7 +4907,6 @@ var TriangleMesh = exports.TriangleMesh = function (_Mesh) {
     _createClass(TriangleMesh, [{
         key: 'update',
         value: function update(vertexPositions) {
-            console.log("update called");
 
             var vertices = new Float32Array(vertexPositions.length * 3);
 
@@ -4917,17 +4916,19 @@ var TriangleMesh = exports.TriangleMesh = function (_Mesh) {
                 vertices[i * 3 + 2] = vertexPositions[i][2];
             }
 
-            this.geometry.addAttribute('position', new _threeMin2.default.BufferAttribute(vertices, 3));
-            this.mesh.geometry.attributes.position.needsUpdate = true;
+            // We can't change the number of vertices on a geometry, so we create a new geometry
+            var updatedGeom = new _threeMin2.default.BufferGeometry();
+            updatedGeom.addAttribute('position', new _threeMin2.default.BufferAttribute(vertices, 3));
 
-            //this.geometry.computeBoundingBox();
+            // Kill old geometry and update our reference to new one
+            this.geometry.dispose();
+            this.geometry = updatedGeom;
+
+            this.mesh.geometry = updatedGeom;
+            this.mesh.needsUpdate = true;
+
+            this.geometry.computeBoundingBox();
         }
-
-        //get position() {
-        //    this.geometry.computeBoundingBox();
-        //    return this.geometry.boundingBox.center();
-        //}
-
     }, {
         key: 'wireframe',
         set: function set(bool) {
@@ -4982,11 +4983,6 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
             }
         }
     }, {
-        key: 'setStride',
-        value: function setStride() {
-            this.stride = 1 / this.LOD;
-        }
-    }, {
         key: 'generate',
         value: function generate() {
 
@@ -5018,7 +5014,7 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
         key: 'LOD',
         set: function set(level) {
             this._lod = level;
-            this.setStride();
+            this.stride = 1 / this.LOD;
             this.generate();
         },
         get: function get() {
