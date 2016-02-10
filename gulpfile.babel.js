@@ -28,7 +28,9 @@ gulp.task('js', () => {
         debug: true
     });
 
-    bundler.transform(babelify);
+    bundler.transform(babelify.configure({
+        ignore: /three\.min\.js/
+    }));
 
     bundler.bundle()
         .on('error', function (err) { console.error(err); })

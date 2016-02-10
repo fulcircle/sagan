@@ -14,26 +14,29 @@ let heightMapFunc = function(x, y) {
     return Math.sin(0.1 * x) + Math.sin(0.1 * y) + random.next().value;
 };
 
-let TERRAIN_HEIGHT = 32;
-let TERRAIN_WIDTH = 32;
+let TERRAIN_HEIGHT = 64;
+let TERRAIN_WIDTH = 64;
 
-let quad = new QuadMesh({height: TERRAIN_HEIGHT, width: TERRAIN_WIDTH, LOD: 1});
-let heightMap = new HeightMap(quad.width + 1, quad.height + 1, heightMapFunc);
-quad.heightMap = heightMap;
+// Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
+let heightMap = new HeightMap(TERRAIN_WIDTH + 1, TERRAIN_HEIGHT + 1, heightMapFunc);
 
-quad.coordinates = new THREE.Vector3(0, quad.height, 0);
-quad.generate();
+let quad = new QuadMesh({height: TERRAIN_HEIGHT, width: TERRAIN_WIDTH, LOD: 1, heightMap: heightMap});
+
+quad.position = new THREE.Vector3();
+quad.wireframe = true;
+quad.LOD = 1;
+engine.add(quad);
 
 generateQuadTree(quad);
 
 // TODO: Convert into breadth-first generation of tree
 function generateQuadTree(parent_quad) {
-    if (parent_quad.LOD > 1) {
+    if (parent_quad.LOD > 5) {
         return;
     }
-    let currX = parent_quad.coordinates.x;
-    let currY = parent_quad.coordinates.y;
-    let currZ = parent_quad.coordinates.z;
+    let currX = parent_quad.position.x;
+    let currY = parent_quad.position.y;
+    let currZ = parent_quad.position.z;
 
     let xstride = parent_quad.width * 0.5;
     let ystride = parent_quad.height * 0.5;
@@ -50,17 +53,15 @@ function generateQuadTree(parent_quad) {
 
         quad.wireframe = true;
 
-        quad.coordinates = new THREE.Vector3(currX, currY, currZ);
-        quad.generate();
-
+        quad.position = new THREE.Vector3(currX, currY, currZ);
 
         parent_quad.children.push(quad);
 
         engine.add(quad);
 
         currX = currX + xstride;
-        if ((currX - parent_quad.coordinates.x) >= parent_quad.width) {
-            currX = parent_quad.coordinates.x;
+        if ((currX - parent_quad.position.x) >= parent_quad.width) {
+            currX = parent_quad.position.x;
             currY = currY + ystride;
         }
         generateQuadTree(quad);

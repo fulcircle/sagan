@@ -38,6 +38,11 @@ export class HeightMap {
         let y1 = Math.floor(y);
         let y2 = Math.ceil(y);
 
+        if (x1 >= this.width || x2 >= this.width
+            || y1 >= this.height || y2 >= this.height ) {
+            console.log(x1, y1, x2, y2);
+            throw new Error("Trying to get an (x,y) value that's off the heightMap");
+        }
         // The four surrounding pixels to this pixel on the heightmap
         let q11 = this.heightMap[x1][y1];
         let q12 = this.heightMap[x1][y2];

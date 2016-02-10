@@ -37,7 +37,6 @@ export class TriangleMesh extends Mesh {
 
     update(vertexPositions) {
 
-
         let vertices = new Float32Array(vertexPositions.length * 3);
 
         for ( var i = 0; i < vertexPositions.length; i++ )
@@ -48,9 +47,10 @@ export class TriangleMesh extends Mesh {
         }
 
         this.geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
-        this.mesh.geometry.attributes.position.needsUpdate = true;
+        this.geometry.attributes.position.needsUpdate = true;
 
         this.geometry.computeBoundingBox();
+
     }
 
     //get position() {
@@ -66,9 +66,12 @@ export class TerrainMesh extends TriangleMesh {
         this.width = width;
         this.height = height;
         this.maxLOD = maxLOD;
+
+        // Set heightMap before LOD so LOD calculates based on heightmap data
+        this.heightMap = heightMap;
+
         this.LOD = LOD;
 
-        this.heightMap = heightMap;
 
     }
 
@@ -76,6 +79,7 @@ export class TerrainMesh extends TriangleMesh {
         if (!this.heightMap) {
             return 0;
         } else {
+            return 0;
             return this.heightMap.getHeight(x, y);
         }
     }
@@ -99,13 +103,9 @@ export class TerrainMesh extends TriangleMesh {
     generate() {
 
         let vertexPositions = [];
-        let startx = this.position.x;
-        let endx = startx + this.width;
 
-        let starty = this.position.y;
-        let endy = starty + this.height;
-        for (var i = startx; i < endx; i = i + this.stride) {
-            for (var j = starty; j < endy; j = j + this.stride) {
+        for (var i = 0; i < this.width; i = i + this.stride) {
+            for (var j = 0; j < this.height; j = j + this.stride) {
                 //Create two triangles that will generate a square
 
                 let i0 = i;
@@ -135,18 +135,5 @@ export class QuadMesh extends TerrainMesh {
         super({width, height, heightMap, LOD, maxLOD});
         this.children = [];
     }
-
-    // Coordinates specify upper left location of mesh if looking at mesh from straight down z-axis
-    set coordinates(pos) {
-        this.geometry.computeBoundingBox();
-        let depth = this.geometry.boundingBox.max.z;
-        this.position = new THREE.Vector3(pos.x, pos.y - this.height, pos.z - depth * 0.5);
-        this._coordinates = pos;
-    }
-
-    get coordinates() {
-        return this._coordinates;
-    }
-
 
 }
