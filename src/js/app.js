@@ -9,13 +9,13 @@ import THREE from './vendor/three.min.js';
 let engine = new Engine(document.body);
 document.body.appendChild(engine.domElement);
 
-let random = randomNumber(0, 0.3);
+let random = randomNumber(0, 2);
 let heightMapFunc = function(x, y) {
-    return Math.sin(0.1 * x) + Math.sin(0.1 * y) + random.next().value;
+    return 3*Math.sin(0.1*x) + 3*Math.sin(0.1*y) + random.next().value;
 };
 
-let TERRAIN_HEIGHT = 64;
-let TERRAIN_WIDTH = 64;
+let TERRAIN_HEIGHT = 32;
+let TERRAIN_WIDTH = 32;
 
 // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
 let heightMap = new HeightMap(TERRAIN_WIDTH + 1, TERRAIN_HEIGHT + 1, heightMapFunc);
@@ -24,14 +24,17 @@ let quad = new QuadMesh({height: TERRAIN_HEIGHT, width: TERRAIN_WIDTH, LOD: 1, h
 
 quad.position = new THREE.Vector3();
 quad.wireframe = true;
-quad.LOD = 1;
+
+let controls = new Controls();
+controls.addControl(quad, 'LOD').min(1).max(4);
+
 engine.add(quad);
 
-generateQuadTree(quad);
+//generateQuadTree(quad);
 
 // TODO: Convert into breadth-first generation of tree
 function generateQuadTree(parent_quad) {
-    if (parent_quad.LOD > 5) {
+    if (parent_quad.LOD > 2) {
         return;
     }
     let currX = parent_quad.position.x;
@@ -68,11 +71,6 @@ function generateQuadTree(parent_quad) {
     }
 }
 
-//let controls = new Controls();
-//controls.addControl(mesh, 'LOD').min(1).max(4)
-//    .onChange((newLOD) => {
-//        meshHelper.wireframe({mesh});
-//    });
 
 
 engine.camera.position = new THREE.Vector3(TERRAIN_WIDTH/2, TERRAIN_HEIGHT/2, 5);

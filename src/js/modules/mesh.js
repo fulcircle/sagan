@@ -36,6 +36,7 @@ export class TriangleMesh extends Mesh {
     }
 
     update(vertexPositions) {
+        console.log("update called");
 
         let vertices = new Float32Array(vertexPositions.length * 3);
 
@@ -47,9 +48,9 @@ export class TriangleMesh extends Mesh {
         }
 
         this.geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
-        this.geometry.attributes.position.needsUpdate = true;
+        this.mesh.geometry.attributes.position.needsUpdate = true;
 
-        this.geometry.computeBoundingBox();
+        //this.geometry.computeBoundingBox();
 
     }
 
@@ -79,15 +80,13 @@ export class TerrainMesh extends TriangleMesh {
         if (!this.heightMap) {
             return 0;
         } else {
-            return 0;
             return this.heightMap.getHeight(x, y);
         }
     }
 
 
     setStride() {
-        let tris = this.width*this.LOD;
-        this.stride = this.width * ( 1 / tris );
+        this.stride = 1 / this.LOD;
     }
 
     set LOD(level) {
@@ -104,8 +103,8 @@ export class TerrainMesh extends TriangleMesh {
 
         let vertexPositions = [];
 
-        for (var i = 0; i < this.width; i = i + this.stride) {
-            for (var j = 0; j < this.height; j = j + this.stride) {
+        for (var i = 0; i < this.width - 1; i = i + this.stride) {
+            for (var j = 0; j < this.height - 1; j = j + this.stride) {
                 //Create two triangles that will generate a square
 
                 let i0 = i;
@@ -124,6 +123,7 @@ export class TerrainMesh extends TriangleMesh {
 
             }
         }
+
         this.update(vertexPositions);
     }
 

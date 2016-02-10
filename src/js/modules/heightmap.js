@@ -21,14 +21,6 @@ export class HeightMap {
 
     // TODO: Think of optimizations
     getHeight(x, y) {
-        //// Get the ratio of the heightmap dimensions to the mesh dimensions
-        //let xratio = this.heightMap.length * ( 1 / this.width );
-        //let yratio = this.heightMap[0].length * ( 1 / this.height );
-        //
-        //// Get the height coordinates on the heightmap that correspond to the x,y vertex on the mesh
-        //// Note: this won't necessarily be an integer, which is why we perform a bilinear interpolation next
-        //let heightmapx = x*xratio;
-        //let heightmapy = y*yratio;
 
         // Interpolate the height value for x,y on the heightmap using bilinear interpolation
         // See: http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
