@@ -14,8 +14,8 @@ let heightMapFunc = function(x, y) {
     return 3*Math.sin(0.1*x) + 3*Math.sin(0.1*y) + random.next().value;
 };
 
-let TERRAIN_HEIGHT = 32;
-let TERRAIN_WIDTH = 32;
+let TERRAIN_HEIGHT = 256;
+let TERRAIN_WIDTH = 256;
 
 // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
 let heightMap = new HeightMap(TERRAIN_WIDTH + 1, TERRAIN_HEIGHT + 1, heightMapFunc);
@@ -24,7 +24,7 @@ let quad = new QuadMesh({
     height: TERRAIN_HEIGHT,
     width: TERRAIN_WIDTH,
     heightMap: heightMap,
-    error: 32
+    error: 256
 });
 
 quad.wireframe = true;

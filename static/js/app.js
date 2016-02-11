@@ -4534,8 +4534,8 @@ var heightMapFunc = function heightMapFunc(x, y) {
     return 3 * Math.sin(0.1 * x) + 3 * Math.sin(0.1 * y) + random.next().value;
 };
 
-var TERRAIN_HEIGHT = 32;
-var TERRAIN_WIDTH = 32;
+var TERRAIN_HEIGHT = 256;
+var TERRAIN_WIDTH = 256;
 
 // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
 var heightMap = new _heightmap.HeightMap(TERRAIN_WIDTH + 1, TERRAIN_HEIGHT + 1, heightMapFunc);
@@ -4544,7 +4544,7 @@ var quad = new _mesh.QuadMesh({
     height: TERRAIN_HEIGHT,
     width: TERRAIN_WIDTH,
     heightMap: heightMap,
-    error: 32
+    error: 256
 });
 
 quad.wireframe = true;
