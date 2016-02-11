@@ -4734,7 +4734,6 @@ var Engine = exports.Engine = function () {
 
         _classCallCheck(this, Engine);
 
-        this.lines = [];
         this.container = container;
         this.scene = new _threeMin2.default.Scene();
 
@@ -4790,7 +4789,7 @@ var Engine = exports.Engine = function () {
 
                 quadDict.quads.push(q);
                 q.visible = false;
-                q._isLeaf = !q.children;
+                q._isLeaf = !q.children.length;
                 queue.push.apply(queue, _toConsumableArray(q.children));
             }
 
@@ -4847,7 +4846,7 @@ var Engine = exports.Engine = function () {
                 rho = 0;
             }
             // Largest allowable screen error
-            var tau = 0.2;
+            var tau = 0.1;
 
             if (quad._isLeaf || rho <= tau) {
                 quad.visible = true;

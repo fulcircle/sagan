@@ -6,7 +6,6 @@ import THREEx from '../vendor/threex.keyboardstate.js'
 export class Engine  {
 
     constructor(container) {
-        this.lines = [];
         this.container = container;
         this.scene = new THREE.Scene();
 
@@ -61,7 +60,7 @@ export class Engine  {
 
             quadDict.quads.push(q);
             q.visible = false;
-            q._isLeaf = !q.children;
+            q._isLeaf = !q.children.length;
             queue.push(...q.children);
         }
 
@@ -97,7 +96,7 @@ export class Engine  {
             rho = 0;
         }
         // Largest allowable screen error
-        let tau = 0.2;
+        let tau = 0.1;
 
         if (quad._isLeaf || rho <= tau) {
             quad.visible = true;
