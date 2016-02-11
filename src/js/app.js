@@ -14,8 +14,8 @@ let heightMapFunc = function(x, y) {
     return 3*Math.sin(0.1*x) + 3*Math.sin(0.1*y) + random.next().value;
 };
 
-let TERRAIN_HEIGHT = 32;
-let TERRAIN_WIDTH = 32;
+let TERRAIN_HEIGHT = 64;
+let TERRAIN_WIDTH = 64;
 
 // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
 let heightMap = new HeightMap(TERRAIN_WIDTH + 1, TERRAIN_HEIGHT + 1, heightMapFunc);
@@ -24,11 +24,11 @@ let quad = new QuadMesh({
     height: TERRAIN_HEIGHT,
     width: TERRAIN_WIDTH,
     LOD: 1,
+    position: new THREE.Vector3(),
     heightMap: heightMap,
     error: 8
 });
 
-quad.position = new THREE.Vector3();
 quad.wireframe = true;
 
 //let controls = new Controls();
@@ -55,13 +55,14 @@ function generateQuadTree(parent_quad) {
             width: parent_quad.width * 0.5,
             height: parent_quad.height * 0.5,
             LOD: LOD,
+            position: new THREE.Vector3(currX, currY, currZ),
             heightMap: parent_quad.heightMap,
             error: parent_quad.error * 0.5
         });
 
         quad.wireframe = true;
 
-        quad.position = new THREE.Vector3(currX, currY, currZ);
+        //quad.position = new THREE.Vector3(currX, currY, currZ);
 
         parent_quad.children.push(quad);
 
@@ -75,10 +76,10 @@ function generateQuadTree(parent_quad) {
 }
 
 engine.addQuadTree(quad);
-engine.drawQuads();
 
 engine.camera.position = new THREE.Vector3(TERRAIN_WIDTH/2, TERRAIN_HEIGHT/2, 20);
 engine.camera.focus(new THREE.Vector3(TERRAIN_WIDTH/2, TERRAIN_HEIGHT/2, 0));
+
 engine.render();
 
 window.engine = engine;

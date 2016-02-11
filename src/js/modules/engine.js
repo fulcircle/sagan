@@ -1,10 +1,12 @@
 import THREE from '../vendor/three.min.js'
 import { Camera } from '../modules/camera.js'
 import { Mesh } from '../modules/mesh.js'
+import THREEx from '../vendor/threex.keyboardstate.js'
 
 export class Engine  {
 
     constructor(container) {
+        this.lines = [];
         this.container = container;
         this.scene = new THREE.Scene();
 
@@ -24,6 +26,8 @@ export class Engine  {
 
         // Our quadtrees for terrain LOD
         this.quads = [];
+
+        this.keyboard = new THREEx.KeyboardState();
 
     }
 
@@ -83,7 +87,9 @@ export class Engine  {
     // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
     // Breadth-first search of quadtree?
     chunkedLOD(quad) {
-        let distance = this.camera.getDistanceTo(quad);
+
+        // TODO: Use box3's distanceToPoint instead
+        let distance = this.camera.getDistanceTo(quad.center);
         let rho = quad.error / distance;
         rho = Math.round(rho * 1000) / 1000;
 
@@ -95,7 +101,7 @@ export class Engine  {
         let tau = 0.2;
 
         if (quad._isLeaf || rho <= tau) {
-            console.log(rho, quad.LOD);
+            //console.log(quad.center);
             quad.visible = true;
         } else {
             // TODO: When we implement excluding of whole subbranches, we'll have to turn off visibility for all chunks in that branch
@@ -105,9 +111,26 @@ export class Engine  {
         }
     }
 
+    handleKeyboard() {
+        if (this.keyboard.pressed('w')) {
+            this.camera.position.y += 1;
+        } else if (this.keyboard.pressed('s')) {
+            this.camera.position.y -= 1;
+        } else if (this.keyboard.pressed('a')) {
+            this.camera.position.x -= 1;
+        } else if (this.keyboard.pressed('d')) {
+            this.camera.position.x += 1;
+        } else if (this.keyboard.pressed('e')) {
+            this.camera.position.z -= 1;
+        } else if (this.keyboard.pressed('q')) {
+            this.camera.position.z += 1;
+}
+    };
+
     render() {
         requestAnimationFrame(this.render.bind(this));
         // TODO: Drawing quads on each render call is inefficient.  Only draw quads on camera move.
+        this.handleKeyboard();
         this.drawQuads();
         this.renderer.render(this.scene, this.camera._camera);
 

@@ -4534,8 +4534,8 @@ var heightMapFunc = function heightMapFunc(x, y) {
     return 3 * Math.sin(0.1 * x) + 3 * Math.sin(0.1 * y) + random.next().value;
 };
 
-var TERRAIN_HEIGHT = 32;
-var TERRAIN_WIDTH = 32;
+var TERRAIN_HEIGHT = 64;
+var TERRAIN_WIDTH = 64;
 
 // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
 var heightMap = new _heightmap.HeightMap(TERRAIN_WIDTH + 1, TERRAIN_HEIGHT + 1, heightMapFunc);
@@ -4544,11 +4544,11 @@ var quad = new _mesh.QuadMesh({
     height: TERRAIN_HEIGHT,
     width: TERRAIN_WIDTH,
     LOD: 1,
+    position: new _threeMin2.default.Vector3(),
     heightMap: heightMap,
     error: 8
 });
 
-quad.position = new _threeMin2.default.Vector3();
 quad.wireframe = true;
 
 //let controls = new Controls();
@@ -4575,13 +4575,14 @@ function generateQuadTree(parent_quad) {
             width: parent_quad.width * 0.5,
             height: parent_quad.height * 0.5,
             LOD: LOD,
+            position: new _threeMin2.default.Vector3(currX, currY, currZ),
             heightMap: parent_quad.heightMap,
             error: parent_quad.error * 0.5
         });
 
         _quad.wireframe = true;
 
-        _quad.position = new _threeMin2.default.Vector3(currX, currY, currZ);
+        //quad.position = new THREE.Vector3(currX, currY, currZ);
 
         parent_quad.children.push(_quad);
 
@@ -4595,10 +4596,10 @@ function generateQuadTree(parent_quad) {
 }
 
 engine.addQuadTree(quad);
-engine.drawQuads();
 
 engine.camera.position = new _threeMin2.default.Vector3(TERRAIN_WIDTH / 2, TERRAIN_HEIGHT / 2, 20);
 engine.camera.focus(new _threeMin2.default.Vector3(TERRAIN_WIDTH / 2, TERRAIN_HEIGHT / 2, 0));
+
 engine.render();
 
 window.engine = engine;
@@ -4714,6 +4715,10 @@ var _camera = require('../modules/camera.js');
 
 var _mesh = require('../modules/mesh.js');
 
+var _threexKeyboardstate = require('../vendor/threex.keyboardstate.js');
+
+var _threexKeyboardstate2 = _interopRequireDefault(_threexKeyboardstate);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -4726,6 +4731,7 @@ var Engine = exports.Engine = function () {
 
         _classCallCheck(this, Engine);
 
+        this.lines = [];
         this.container = container;
         this.scene = new _threeMin2.default.Scene();
 
@@ -4744,6 +4750,8 @@ var Engine = exports.Engine = function () {
 
         // Our quadtrees for terrain LOD
         this.quads = [];
+
+        this.keyboard = new _threexKeyboardstate2.default.KeyboardState();
     }
 
     _createClass(Engine, [{
@@ -4826,7 +4834,9 @@ var Engine = exports.Engine = function () {
     }, {
         key: 'chunkedLOD',
         value: function chunkedLOD(quad) {
-            var distance = this.camera.getDistanceTo(quad);
+
+            // TODO: Use box3's distanceToPoint instead
+            var distance = this.camera.getDistanceTo(quad.center);
             var rho = quad.error / distance;
             rho = Math.round(rho * 1000) / 1000;
 
@@ -4838,7 +4848,7 @@ var Engine = exports.Engine = function () {
             var tau = 0.2;
 
             if (quad._isLeaf || rho <= tau) {
-                console.log(rho, quad.LOD);
+                //console.log(quad.center);
                 quad.visible = true;
             } else {
                 // TODO: When we implement excluding of whole subbranches, we'll have to turn off visibility for all chunks in that branch
@@ -4869,10 +4879,28 @@ var Engine = exports.Engine = function () {
             }
         }
     }, {
+        key: 'handleKeyboard',
+        value: function handleKeyboard() {
+            if (this.keyboard.pressed('w')) {
+                this.camera.position.y += 1;
+            } else if (this.keyboard.pressed('s')) {
+                this.camera.position.y -= 1;
+            } else if (this.keyboard.pressed('a')) {
+                this.camera.position.x -= 1;
+            } else if (this.keyboard.pressed('d')) {
+                this.camera.position.x += 1;
+            } else if (this.keyboard.pressed('e')) {
+                this.camera.position.z -= 1;
+            } else if (this.keyboard.pressed('q')) {
+                this.camera.position.z += 1;
+            }
+        }
+    }, {
         key: 'render',
         value: function render() {
             requestAnimationFrame(this.render.bind(this));
             // TODO: Drawing quads on each render call is inefficient.  Only draw quads on camera move.
+            this.handleKeyboard();
             this.drawQuads();
             this.renderer.render(this.scene, this.camera._camera);
         }
@@ -4886,7 +4914,7 @@ var Engine = exports.Engine = function () {
     return Engine;
 }();
 
-},{"../modules/camera.js":192,"../modules/mesh.js":196,"../vendor/three.min.js":199}],195:[function(require,module,exports){
+},{"../modules/camera.js":192,"../modules/mesh.js":196,"../vendor/three.min.js":199,"../vendor/threex.keyboardstate.js":201}],195:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -5006,18 +5034,16 @@ var Mesh = exports.Mesh = function () {
     _createClass(Mesh, [{
         key: 'position',
         set: function set(pos) {
-            this.mesh.position.set(pos.x, pos.y, pos.z);
+            this.mesh.position.copy(pos);
         },
         get: function get() {
             return this.mesh.position;
         }
     }, {
-        key: 'visibile',
+        key: 'visible',
         get: function get() {
             return this.mesh.visible;
-        }
-    }, {
-        key: 'visible',
+        },
         set: function set(bool) {
             this.mesh.visible = bool;
         }
@@ -5058,6 +5084,7 @@ var TriangleMesh = exports.TriangleMesh = function (_Mesh) {
             updatedGeom.addAttribute('position', new _threeMin2.default.BufferAttribute(vertices, 3));
 
             // Kill old geometry and update our reference to new one
+            console.log(this.mesh.position);
             this.geometry.dispose();
             this.geometry = updatedGeom;
 
@@ -5067,6 +5094,10 @@ var TriangleMesh = exports.TriangleMesh = function (_Mesh) {
             this.geometry.computeBoundingBox();
 
             this.center = this.geometry.boundingBox.center();
+            //console.log(this.mesh.localToWorld(this.geometry.boundingBox.min));
+            //console.log(this.mesh.position, this.center);
+            //this.mesh.localToWorld(this.center);
+            //console.log(this.center);
         }
     }, {
         key: 'wireframe',
@@ -5118,7 +5149,6 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
             if (!this.heightMap) {
                 return 0;
             } else {
-                return 0;
                 return this.heightMap.getHeight(x, y);
             }
         }
@@ -5172,6 +5202,7 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
         var width = _ref2.width;
         var height = _ref2.height;
         var heightMap = _ref2.heightMap;
+        var position = _ref2.position;
         var _ref2$LOD = _ref2.LOD;
         var LOD = _ref2$LOD === undefined ? 1 : _ref2$LOD;
         var _ref2$maxLOD = _ref2.maxLOD;
@@ -5184,6 +5215,7 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
         var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(QuadMesh).call(this, { width: width, height: height, heightMap: heightMap, LOD: LOD, maxLOD: maxLOD }));
 
         _this3.error = error;
+        _this3.position = position;
         _this3.children = [];
         return _this3;
     }
@@ -7458,7 +7490,182 @@ _threeMin2.default.OrbitControls.prototype.constructor = _threeMin2.default.Orbi
 
 exports.default = _threeMin2.default.OrbitControls;
 
-},{"../vendor/three.min.js":199}]},{},[191])
+},{"../vendor/three.min.js":199}],201:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+// THREEx.KeyboardState.js keep the current state of the keyboard.
+// It is possible to query it at any time. No need of an event.
+// This is particularly convenient in loop driven case, like in
+// 3D demos or games.
+//
+// # Usage
+//
+// **Step 1**: Create the object
+//
+// ```var keyboard	= new THREEx.KeyboardState();```
+//
+// **Step 2**: Query the keyboard state
+//
+// This will return true if shift and A are pressed, false otherwise
+//
+// ```keyboard.pressed("shift+A")```
+//
+// **Step 3**: Stop listening to the keyboard
+//
+// ```keyboard.destroy()```
+//
+// NOTE: this library may be nice as standaline. independant from three.js
+// - rename it keyboardForGame
+//
+// # Code
+//
+
+/** @namespace */
+var THREEx = THREEx || {};
+
+/**
+ * - NOTE: it would be quite easy to push event-driven too
+ *   - microevent.js for events handling
+ *   - in this._onkeyChange, generate a string from the DOM event
+ *   - use this as event name
+ */
+THREEx.KeyboardState = function (domElement) {
+    this.domElement = domElement || document;
+    // to store the current state
+    this.keyCodes = {};
+    this.modifiers = {};
+
+    // create callback to bind/unbind keyboard events
+    var _this = this;
+    this._onKeyDown = function (event) {
+        _this._onKeyChange(event);
+    };
+    this._onKeyUp = function (event) {
+        _this._onKeyChange(event);
+    };
+
+    // bind keyEvents
+    this.domElement.addEventListener("keydown", this._onKeyDown, false);
+    this.domElement.addEventListener("keyup", this._onKeyUp, false);
+
+    // create callback to bind/unbind window blur event
+    this._onBlur = function () {
+        for (var prop in _this.keyCodes) {
+            _this.keyCodes[prop] = false;
+        }for (var prop in _this.modifiers) {
+            _this.modifiers[prop] = false;
+        }
+    };
+
+    // bind window blur
+    window.addEventListener("blur", this._onBlur, false);
+};
+
+/**
+ * To stop listening of the keyboard events
+ */
+THREEx.KeyboardState.prototype.destroy = function () {
+    // unbind keyEvents
+    this.domElement.removeEventListener("keydown", this._onKeyDown, false);
+    this.domElement.removeEventListener("keyup", this._onKeyUp, false);
+
+    // unbind window blur event
+    window.removeEventListener("blur", this._onBlur, false);
+};
+
+THREEx.KeyboardState.MODIFIERS = ['shift', 'ctrl', 'alt', 'meta'];
+THREEx.KeyboardState.ALIAS = {
+    'left': 37,
+    'up': 38,
+    'right': 39,
+    'down': 40,
+    'space': 32,
+    'pageup': 33,
+    'pagedown': 34,
+    'tab': 9,
+    'escape': 27
+};
+
+/**
+ * to process the keyboard dom event
+ */
+THREEx.KeyboardState.prototype._onKeyChange = function (event) {
+    // log to debug
+    //console.log("onKeyChange", event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey)
+
+    // update this.keyCodes
+    var keyCode = event.keyCode;
+    var pressed = event.type === 'keydown' ? true : false;
+    this.keyCodes[keyCode] = pressed;
+    // update this.modifiers
+    this.modifiers['shift'] = event.shiftKey;
+    this.modifiers['ctrl'] = event.ctrlKey;
+    this.modifiers['alt'] = event.altKey;
+    this.modifiers['meta'] = event.metaKey;
+};
+
+/**
+ * query keyboard state to know if a key is pressed of not
+ *
+ * @param {String} keyDesc the description of the key. format : modifiers+key e.g shift+A
+ * @returns {Boolean} true if the key is pressed, false otherwise
+ */
+THREEx.KeyboardState.prototype.pressed = function (keyDesc) {
+    var keys = keyDesc.split("+");
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        var pressed = false;
+        if (THREEx.KeyboardState.MODIFIERS.indexOf(key) !== -1) {
+            pressed = this.modifiers[key];
+        } else if (Object.keys(THREEx.KeyboardState.ALIAS).indexOf(key) != -1) {
+            pressed = this.keyCodes[THREEx.KeyboardState.ALIAS[key]];
+        } else {
+            pressed = this.keyCodes[key.toUpperCase().charCodeAt(0)];
+        }
+        if (!pressed) return false;
+    };
+    return true;
+};
+
+/**
+ * return true if an event match a keyDesc
+ * @param  {KeyboardEvent} event   keyboard event
+ * @param  {String} keyDesc string description of the key
+ * @return {Boolean}         true if the event match keyDesc, false otherwise
+ */
+THREEx.KeyboardState.prototype.eventMatches = function (event, keyDesc) {
+    var aliases = THREEx.KeyboardState.ALIAS;
+    var aliasKeys = Object.keys(aliases);
+    var keys = keyDesc.split("+");
+    // log to debug
+    // console.log("eventMatches", event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey)
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        var pressed = false;
+        if (key === 'shift') {
+            pressed = event.shiftKey ? true : false;
+        } else if (key === 'ctrl') {
+            pressed = event.ctrlKey ? true : false;
+        } else if (key === 'alt') {
+            pressed = event.altKey ? true : false;
+        } else if (key === 'meta') {
+            pressed = event.metaKey ? true : false;
+        } else if (aliasKeys.indexOf(key) !== -1) {
+            pressed = event.keyCode === aliases[key] ? true : false;
+        } else if (event.keyCode === key.toUpperCase().charCodeAt(0)) {
+            pressed = true;
+        }
+        if (!pressed) return false;
+    }
+    return true;
+};
+
+exports.default = THREEx;
+
+},{}]},{},[191])
 
 
 //# sourceMappingURL=/js/app.js.map

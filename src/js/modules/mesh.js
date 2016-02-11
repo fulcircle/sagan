@@ -6,14 +6,14 @@ import { randomNumber } from './util.js'
 export class Mesh {
 
     set position(pos) {
-        this.mesh.position.set(pos.x, pos.y, pos.z);
+        this.mesh.position.copy(pos);
     }
 
     get position() {
         return this.mesh.position;
     }
 
-    get visibile() {
+    get visible() {
         return this.mesh.visible;
     }
 
@@ -56,6 +56,7 @@ export class TriangleMesh extends Mesh {
         updatedGeom.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
 
         // Kill old geometry and update our reference to new one
+        console.log(this.mesh.position);
         this.geometry.dispose();
         this.geometry = updatedGeom;
 
@@ -65,6 +66,10 @@ export class TriangleMesh extends Mesh {
         this.geometry.computeBoundingBox();
 
         this.center = this.geometry.boundingBox.center();
+        //console.log(this.mesh.localToWorld(this.geometry.boundingBox.min));
+        //console.log(this.mesh.position, this.center);
+        //this.mesh.localToWorld(this.center);
+        //console.log(this.center);
 
     }
 }
@@ -89,7 +94,6 @@ export class TerrainMesh extends TriangleMesh {
         if (!this.heightMap) {
             return 0;
         } else {
-            return 0;
             return this.heightMap.getHeight(x, y);
         }
     }
@@ -136,9 +140,10 @@ export class TerrainMesh extends TriangleMesh {
 
 export class QuadMesh extends TerrainMesh {
 
-    constructor({width, height, heightMap, LOD=1, maxLOD=4, error=0}) {
+    constructor({width, height, heightMap, position, LOD=1, maxLOD=4, error=0}) {
         super({width, height, heightMap, LOD, maxLOD});
         this.error = error;
+        this.position = position;
         this.children = [];
     }
 
