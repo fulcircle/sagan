@@ -7,7 +7,6 @@ export class Mesh {
 
     set position(pos) {
         this.mesh.position.copy(pos);
-        this.mesh.needsUpdate = true;
     }
 
     get position() {
@@ -57,7 +56,6 @@ export class TriangleMesh extends Mesh {
         updatedGeom.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
 
         // Kill old geometry and update our reference to new one
-        console.log(this.mesh.position);
         this.geometry.dispose();
         this.geometry = updatedGeom;
 
@@ -66,11 +64,12 @@ export class TriangleMesh extends Mesh {
 
         this.geometry.computeBoundingBox();
 
-        this.center = this.geometry.boundingBox.center();
-        //console.log(this.mesh.localToWorld(this.geometry.boundingBox.min));
-        //console.log(this.mesh.position, this.center);
-        //this.mesh.localToWorld(this.center);
-        //console.log(this.center);
+        // TODO: Clean up these calculations, and figure out why localToWorld doesn't work
+        let centroid = new THREE.Vector3();
+        centroid.addVectors(this.geometry.boundingBox.min, this.geometry.boundingBox.max);
+        centroid.multiplyScalar(0.5);
+        centroid.addVectors(centroid, this.mesh.position);
+        this.centroid = centroid;
 
     }
 }
@@ -86,9 +85,7 @@ export class TerrainMesh extends TriangleMesh {
         // Set heightMap before LOD so LOD calculates based on heightmap data
         this.heightMap = heightMap;
 
-        this.LOD = LOD;
-
-
+        //this.LOD = LOD;
     }
 
     getHeight(x, y) {
@@ -101,7 +98,7 @@ export class TerrainMesh extends TriangleMesh {
 
     set LOD(level) {
         this._lod = level;
-        this.stride = 1 / this.LOD;
+        this.stride = (this.width / this.LOD);
         this.generate();
     }
 
@@ -113,8 +110,8 @@ export class TerrainMesh extends TriangleMesh {
 
         let vertexPositions = [];
 
-        for (var i = 0; i <= this.width-this.stride; i = i + this.stride) {
-            for (var j = 0; j <= this.height-this.stride; j = j + this.stride) {
+        for (var i = 0; i <= this.width - this.stride; i = i + this.stride) {
+            for (var j = 0; j <= this.height - this.stride; j = j + this.stride) {
                 //Create two triangles that will generate a square
 
                 let i0 = i;
@@ -123,13 +120,20 @@ export class TerrainMesh extends TriangleMesh {
                 let j0 = j;
                 let j1 = j + this.stride;
 
-                vertexPositions.push([i0, j0, this.getHeight(i0, j0)]);
-                vertexPositions.push([i1, j0, this.getHeight(i1, j0)]);
-                vertexPositions.push([i0, j1, this.getHeight(i0, j1)]);
+                // TODO: Figure out a way to apply local to world matrix transform here it may be faster
+                let ih0 = i0 + this.mesh.position.x;
+                let ih1 = i1 + this.mesh.position.x;
 
-                vertexPositions.push([i1, j0, this.getHeight(i1, j0)]);
-                vertexPositions.push([i1, j1, this.getHeight(i1, j1)]);
-                vertexPositions.push([i0, j1, this.getHeight(i0, j1)]);
+                let jh0 = j0 + this.mesh.position.y;
+                let jh1 = j1 + this.mesh.position.y;
+
+                vertexPositions.push([i0, j0, this.getHeight(ih0, jh0)]);
+                vertexPositions.push([i1, j0, this.getHeight(ih1, jh0)]);
+                vertexPositions.push([i0, j1, this.getHeight(ih0, jh1)]);
+
+                vertexPositions.push([i1, j0, this.getHeight(ih1, jh0)]);
+                vertexPositions.push([i1, j1, this.getHeight(ih1, jh1)]);
+                vertexPositions.push([i0, j1, this.getHeight(ih0, jh1)]);
 
             }
         }

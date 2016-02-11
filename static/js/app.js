@@ -4534,8 +4534,8 @@ var heightMapFunc = function heightMapFunc(x, y) {
     return 3 * Math.sin(0.1 * x) + 3 * Math.sin(0.1 * y) + random.next().value;
 };
 
-var TERRAIN_HEIGHT = 64;
-var TERRAIN_WIDTH = 64;
+var TERRAIN_HEIGHT = 32;
+var TERRAIN_WIDTH = 32;
 
 // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
 var heightMap = new _heightmap.HeightMap(TERRAIN_WIDTH + 1, TERRAIN_HEIGHT + 1, heightMapFunc);
@@ -4543,14 +4543,14 @@ var heightMap = new _heightmap.HeightMap(TERRAIN_WIDTH + 1, TERRAIN_HEIGHT + 1, 
 var quad = new _mesh.QuadMesh({
     height: TERRAIN_HEIGHT,
     width: TERRAIN_WIDTH,
-    LOD: 1,
     heightMap: heightMap,
-    error: 8
+    error: 32
 });
 
 quad.wireframe = true;
 engine.add(quad);
 quad.position = new _threeMin2.default.Vector3();
+quad.LOD = 1;
 
 //let controls = new Controls();
 //controls.addControl(quad, 'LOD').min(1).max(4).step(1);
@@ -4559,7 +4559,7 @@ generateQuadTree(quad);
 
 // TODO: Convert into breadth-first generation of tree
 function generateQuadTree(parent_quad) {
-    if (parent_quad.LOD > 4) {
+    if (parent_quad.LOD > 6) {
         return;
     }
     var currX = parent_quad.position.x;
@@ -4587,6 +4587,7 @@ function generateQuadTree(parent_quad) {
         parent_quad.children.push(_quad);
         engine.add(_quad);
         _quad.position = new _threeMin2.default.Vector3(currX, currY, currZ);
+        _quad.LOD = LOD;
 
         currX = currX + xstride;
         if (currX - parent_quad.position.x >= parent_quad.width) {
@@ -4631,7 +4632,7 @@ var Camera = exports.Camera = function () {
         _classCallCheck(this, Camera);
 
         this.container = container;
-        this._camera = new _threeMin2.default.PerspectiveCamera(75, this.container.offsetWidth / this.container.offsetHeight, .1, 1000);
+        this._camera = new _threeMin2.default.PerspectiveCamera(75, this.container.offsetWidth / this.container.offsetHeight, .1, 5000);
 
         this.orbit = new _threeMin2.default.OrbitControls(this._camera, this.container);
     }
@@ -4837,7 +4838,7 @@ var Engine = exports.Engine = function () {
         value: function chunkedLOD(quad) {
 
             // TODO: Use box3's distanceToPoint instead
-            var distance = this.camera.getDistanceTo(quad.center);
+            var distance = this.camera.getDistanceTo(quad.centroid);
             var rho = quad.error / distance;
             rho = Math.round(rho * 1000) / 1000;
 
@@ -4849,7 +4850,6 @@ var Engine = exports.Engine = function () {
             var tau = 0.2;
 
             if (quad._isLeaf || rho <= tau) {
-                //console.log(quad.center);
                 quad.visible = true;
             } else {
                 // TODO: When we implement excluding of whole subbranches, we'll have to turn off visibility for all chunks in that branch
@@ -4882,17 +4882,30 @@ var Engine = exports.Engine = function () {
     }, {
         key: 'handleKeyboard',
         value: function handleKeyboard() {
+
             if (this.keyboard.pressed('w')) {
                 this.camera.position.y += 1;
+                var focus = new _threeMin2.default.Vector3(this.camera.position.x, this.camera.position.y, 0);
+                this.camera.focus(focus);
             } else if (this.keyboard.pressed('s')) {
+                var focus = new _threeMin2.default.Vector3(this.camera.position.x, this.camera.position.y, 0);
                 this.camera.position.y -= 1;
+                this.camera.focus(focus);
             } else if (this.keyboard.pressed('a')) {
+                var focus = new _threeMin2.default.Vector3(this.camera.position.x, this.camera.position.y, 0);
                 this.camera.position.x -= 1;
+                this.camera.focus(focus);
             } else if (this.keyboard.pressed('d')) {
+                var focus = new _threeMin2.default.Vector3(this.camera.position.x, this.camera.position.y, 0);
                 this.camera.position.x += 1;
+                this.camera.focus(focus);
             } else if (this.keyboard.pressed('e')) {
+                var focus = new _threeMin2.default.Vector3(this.camera.position.x, this.camera.position.y, 0);
+                this.camera.focus(focus);
                 this.camera.position.z -= 1;
             } else if (this.keyboard.pressed('q')) {
+                var focus = new _threeMin2.default.Vector3(this.camera.position.x, this.camera.position.y, 0);
+                this.camera.focus(focus);
                 this.camera.position.z += 1;
             }
         }
@@ -5036,7 +5049,6 @@ var Mesh = exports.Mesh = function () {
         key: 'position',
         set: function set(pos) {
             this.mesh.position.copy(pos);
-            this.mesh.needsUpdate = true;
         },
         get: function get() {
             return this.mesh.position;
@@ -5086,7 +5098,6 @@ var TriangleMesh = exports.TriangleMesh = function (_Mesh) {
             updatedGeom.addAttribute('position', new _threeMin2.default.BufferAttribute(vertices, 3));
 
             // Kill old geometry and update our reference to new one
-            console.log(this.mesh.position);
             this.geometry.dispose();
             this.geometry = updatedGeom;
 
@@ -5095,11 +5106,12 @@ var TriangleMesh = exports.TriangleMesh = function (_Mesh) {
 
             this.geometry.computeBoundingBox();
 
-            this.center = this.geometry.boundingBox.center();
-            //console.log(this.mesh.localToWorld(this.geometry.boundingBox.min));
-            //console.log(this.mesh.position, this.center);
-            //this.mesh.localToWorld(this.center);
-            //console.log(this.center);
+            // TODO: Clean up these calculations, and figure out why localToWorld doesn't work
+            var centroid = new _threeMin2.default.Vector3();
+            centroid.addVectors(this.geometry.boundingBox.min, this.geometry.boundingBox.max);
+            centroid.multiplyScalar(0.5);
+            centroid.addVectors(centroid, this.mesh.position);
+            this.centroid = centroid;
         }
     }, {
         key: 'wireframe',
@@ -5140,8 +5152,7 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
         // Set heightMap before LOD so LOD calculates based on heightmap data
         _this2.heightMap = heightMap;
 
-        _this2.LOD = LOD;
-
+        //this.LOD = LOD;
         return _this2;
     }
 
@@ -5170,13 +5181,20 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
                     var j0 = j;
                     var j1 = j + this.stride;
 
-                    vertexPositions.push([i0, j0, this.getHeight(i0, j0)]);
-                    vertexPositions.push([i1, j0, this.getHeight(i1, j0)]);
-                    vertexPositions.push([i0, j1, this.getHeight(i0, j1)]);
+                    // TODO: Figure out a way to apply local to world matrix transform here it may be faster
+                    var ih0 = i0 + this.mesh.position.x;
+                    var ih1 = i1 + this.mesh.position.x;
 
-                    vertexPositions.push([i1, j0, this.getHeight(i1, j0)]);
-                    vertexPositions.push([i1, j1, this.getHeight(i1, j1)]);
-                    vertexPositions.push([i0, j1, this.getHeight(i0, j1)]);
+                    var jh0 = j0 + this.mesh.position.y;
+                    var jh1 = j1 + this.mesh.position.y;
+
+                    vertexPositions.push([i0, j0, this.getHeight(ih0, jh0)]);
+                    vertexPositions.push([i1, j0, this.getHeight(ih1, jh0)]);
+                    vertexPositions.push([i0, j1, this.getHeight(ih0, jh1)]);
+
+                    vertexPositions.push([i1, j0, this.getHeight(ih1, jh0)]);
+                    vertexPositions.push([i1, j1, this.getHeight(ih1, jh1)]);
+                    vertexPositions.push([i0, j1, this.getHeight(ih0, jh1)]);
                 }
             }
 
@@ -5186,7 +5204,7 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
         key: 'LOD',
         set: function set(level) {
             this._lod = level;
-            this.stride = 1 / this.LOD;
+            this.stride = this.width / this.LOD;
             this.generate();
         },
         get: function get() {

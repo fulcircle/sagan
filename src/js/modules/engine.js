@@ -88,7 +88,7 @@ export class Engine  {
     chunkedLOD(quad) {
 
         // TODO: Use box3's distanceToPoint instead
-        let distance = this.camera.getDistanceTo(quad.center);
+        let distance = this.camera.getDistanceTo(quad.centroid);
         let rho = quad.error / distance;
         rho = Math.round(rho * 1000) / 1000;
 
@@ -100,7 +100,6 @@ export class Engine  {
         let tau = 0.2;
 
         if (quad._isLeaf || rho <= tau) {
-            //console.log(quad.center);
             quad.visible = true;
         } else {
             // TODO: When we implement excluding of whole subbranches, we'll have to turn off visibility for all chunks in that branch
@@ -111,19 +110,32 @@ export class Engine  {
     }
 
     handleKeyboard() {
+
         if (this.keyboard.pressed('w')) {
             this.camera.position.y += 1;
+            let focus = new THREE.Vector3(this.camera.position.x, this.camera.position.y, 0);
+            this.camera.focus(focus);
         } else if (this.keyboard.pressed('s')) {
+            let focus = new THREE.Vector3(this.camera.position.x, this.camera.position.y, 0);
             this.camera.position.y -= 1;
+            this.camera.focus(focus);
         } else if (this.keyboard.pressed('a')) {
+            let focus = new THREE.Vector3(this.camera.position.x, this.camera.position.y, 0);
             this.camera.position.x -= 1;
+            this.camera.focus(focus);
         } else if (this.keyboard.pressed('d')) {
+            let focus = new THREE.Vector3(this.camera.position.x, this.camera.position.y, 0);
             this.camera.position.x += 1;
+            this.camera.focus(focus);
         } else if (this.keyboard.pressed('e')) {
+            let focus = new THREE.Vector3(this.camera.position.x, this.camera.position.y, 0);
+            this.camera.focus(focus);
             this.camera.position.z -= 1;
         } else if (this.keyboard.pressed('q')) {
+            let focus = new THREE.Vector3(this.camera.position.x, this.camera.position.y, 0);
+            this.camera.focus(focus);
             this.camera.position.z += 1;
-}
+        }
     };
 
     render() {
