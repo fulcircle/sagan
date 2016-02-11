@@ -7,6 +7,7 @@ export class Mesh {
 
     set position(pos) {
         this.mesh.position.copy(pos);
+        this.mesh.needsUpdate = true;
     }
 
     get position() {
@@ -140,10 +141,9 @@ export class TerrainMesh extends TriangleMesh {
 
 export class QuadMesh extends TerrainMesh {
 
-    constructor({width, height, heightMap, position, LOD=1, maxLOD=4, error=0}) {
+    constructor({width, height, heightMap, LOD=1, maxLOD=4, error=0}) {
         super({width, height, heightMap, LOD, maxLOD});
         this.error = error;
-        this.position = position;
         this.children = [];
     }
 

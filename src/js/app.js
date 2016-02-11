@@ -24,12 +24,13 @@ let quad = new QuadMesh({
     height: TERRAIN_HEIGHT,
     width: TERRAIN_WIDTH,
     LOD: 1,
-    position: new THREE.Vector3(),
     heightMap: heightMap,
     error: 8
 });
 
 quad.wireframe = true;
+engine.add(quad);
+quad.position = new THREE.Vector3();
 
 //let controls = new Controls();
 //controls.addControl(quad, 'LOD').min(1).max(4).step(1);
@@ -55,7 +56,6 @@ function generateQuadTree(parent_quad) {
             width: parent_quad.width * 0.5,
             height: parent_quad.height * 0.5,
             LOD: LOD,
-            position: new THREE.Vector3(currX, currY, currZ),
             heightMap: parent_quad.heightMap,
             error: parent_quad.error * 0.5
         });
@@ -65,6 +65,8 @@ function generateQuadTree(parent_quad) {
         //quad.position = new THREE.Vector3(currX, currY, currZ);
 
         parent_quad.children.push(quad);
+        engine.add(quad);
+        quad.position = new THREE.Vector3(currX, currY, currZ);
 
         currX = currX + xstride;
         if ((currX - parent_quad.position.x) >= parent_quad.width) {

@@ -4544,12 +4544,13 @@ var quad = new _mesh.QuadMesh({
     height: TERRAIN_HEIGHT,
     width: TERRAIN_WIDTH,
     LOD: 1,
-    position: new _threeMin2.default.Vector3(),
     heightMap: heightMap,
     error: 8
 });
 
 quad.wireframe = true;
+engine.add(quad);
+quad.position = new _threeMin2.default.Vector3();
 
 //let controls = new Controls();
 //controls.addControl(quad, 'LOD').min(1).max(4).step(1);
@@ -4575,7 +4576,6 @@ function generateQuadTree(parent_quad) {
             width: parent_quad.width * 0.5,
             height: parent_quad.height * 0.5,
             LOD: LOD,
-            position: new _threeMin2.default.Vector3(currX, currY, currZ),
             heightMap: parent_quad.heightMap,
             error: parent_quad.error * 0.5
         });
@@ -4585,6 +4585,8 @@ function generateQuadTree(parent_quad) {
         //quad.position = new THREE.Vector3(currX, currY, currZ);
 
         parent_quad.children.push(_quad);
+        engine.add(_quad);
+        _quad.position = new _threeMin2.default.Vector3(currX, currY, currZ);
 
         currX = currX + xstride;
         if (currX - parent_quad.position.x >= parent_quad.width) {
@@ -4787,7 +4789,6 @@ var Engine = exports.Engine = function () {
 
                 quadDict.quads.push(q);
                 q.visible = false;
-                this.add(q);
                 q._isLeaf = !q.children;
                 queue.push.apply(queue, _toConsumableArray(q.children));
             }
@@ -5035,6 +5036,7 @@ var Mesh = exports.Mesh = function () {
         key: 'position',
         set: function set(pos) {
             this.mesh.position.copy(pos);
+            this.mesh.needsUpdate = true;
         },
         get: function get() {
             return this.mesh.position;
@@ -5202,7 +5204,6 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
         var width = _ref2.width;
         var height = _ref2.height;
         var heightMap = _ref2.heightMap;
-        var position = _ref2.position;
         var _ref2$LOD = _ref2.LOD;
         var LOD = _ref2$LOD === undefined ? 1 : _ref2$LOD;
         var _ref2$maxLOD = _ref2.maxLOD;
@@ -5215,7 +5216,6 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
         var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(QuadMesh).call(this, { width: width, height: height, heightMap: heightMap, LOD: LOD, maxLOD: maxLOD }));
 
         _this3.error = error;
-        _this3.position = position;
         _this3.children = [];
         return _this3;
     }

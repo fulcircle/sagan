@@ -61,7 +61,6 @@ export class Engine  {
 
             quadDict.quads.push(q);
             q.visible = false;
-            this.add(q);
             q._isLeaf = !q.children;
             queue.push(...q.children);
         }
