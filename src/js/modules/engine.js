@@ -12,14 +12,21 @@ export class Engine  {
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(this.container.offsetWidth, this.container.offsetHeight);
 
+        this.viewportWidth = this.container.offsetWidth;
+        this.viewportHeight = this.container.offsetHeight;
+
         this.camera = new Camera(this.container);
+
 
         window.addEventListener( 'resize', () => {
 
-            this.camera._camera.aspect = this.container.offsetWidth / this.container.offsetHeight;
-            this.camera._camera.updateProjectionMatrix();
+            this.camera.aspect = this.container.offsetWidth / this.container.offsetHeight;
+
 
             this.renderer.setSize( this.container.offsetWidth, this.container.offsetHeight );
+
+            this.viewportWidth = this.container.offsetWidth;
+            this.viewportHeight = this.container.offsetHeight;
 
         }, false );
 
@@ -88,7 +95,10 @@ export class Engine  {
 
         // TODO: Use box3's distanceToPoint instead
         let distance = this.camera.getDistanceTo(quad.centroid);
-        let rho = quad.error / distance;
+
+        // Screen space error
+        let rho = (quad.error / distance) * this.camera.perspectiveScalingFactor;
+
         rho = Math.round(rho * 1000) / 1000;
 
         // distance = 0 so screenspace error should be 0
@@ -96,7 +106,7 @@ export class Engine  {
             rho = 0;
         }
         // Largest allowable screen error
-        let tau = 0.1;
+        let tau = 45;
 
         if (quad._isLeaf || rho <= tau) {
             quad.visible = true;

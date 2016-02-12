@@ -9,6 +9,8 @@ export class Camera {
 
         this.orbit = new THREE.OrbitControls( this._camera,  this.container);
 
+        this.updateFOV();
+
     }
 
     get position() {
@@ -35,6 +37,33 @@ export class Camera {
             return this.position.distanceTo(object.position);
         }
     }
+
+    get aspect() {
+        return this._camera.aspect;
+    }
+
+    set aspect(aspect) {
+        this._camera.aspect = aspect;
+        this._camera.updateProjectionMatrix();
+
+        this.updateFOV();
+    }
+
+    set zoom(zoom) {
+        this._camera.zoom = zoom;
+        this._camera.updateProjectionMatrix();
+
+        this.updateFOV();
+    }
+
+    updateFOV() {
+        this.vFOV = THREE.Math.degToRad(this._camera.fov);
+        this.hFOV = 2 * Math.atan( Math.tan( this.vFOV * 0.5 ) * this._camera.aspect  / this._camera.zoom);
+        // Perspective scaling factor
+        this.horizontalScalingFactor = (2 * Math.tan(this.hFOV * 0.5));
+        this.perspectiveScalingFactor = this.container.offsetWidth / this.horizontalScalingFactor;
+    }
+
 
 
 }

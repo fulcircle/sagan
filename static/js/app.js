@@ -4635,6 +4635,8 @@ var Camera = exports.Camera = function () {
         this._camera = new _threeMin2.default.PerspectiveCamera(75, this.container.offsetWidth / this.container.offsetHeight, .1, 5000);
 
         this.orbit = new _threeMin2.default.OrbitControls(this._camera, this.container);
+
+        this.updateFOV();
     }
 
     _createClass(Camera, [{
@@ -4657,12 +4659,40 @@ var Camera = exports.Camera = function () {
             }
         }
     }, {
+        key: 'updateFOV',
+        value: function updateFOV() {
+            this.vFOV = _threeMin2.default.Math.degToRad(this._camera.fov);
+            this.hFOV = 2 * Math.atan(Math.tan(this.vFOV * 0.5) * this._camera.aspect / this._camera.zoom);
+            // Perspective scaling factor
+            this.horizontalScalingFactor = 2 * Math.tan(this.hFOV * 0.5);
+            this.perspectiveScalingFactor = this.container.offsetWidth / this.horizontalScalingFactor;
+        }
+    }, {
         key: 'position',
         get: function get() {
             return this._camera.position;
         },
         set: function set(vec3) {
             this._camera.position.set(vec3.x, vec3.y, vec3.z);
+        }
+    }, {
+        key: 'aspect',
+        get: function get() {
+            return this._camera.aspect;
+        },
+        set: function set(aspect) {
+            this._camera.aspect = aspect;
+            this._camera.updateProjectionMatrix();
+
+            this.updateFOV();
+        }
+    }, {
+        key: 'zoom',
+        set: function set(zoom) {
+            this._camera.zoom = zoom;
+            this._camera.updateProjectionMatrix();
+
+            this.updateFOV();
         }
     }]);
 
@@ -4740,14 +4770,19 @@ var Engine = exports.Engine = function () {
         this.renderer = new _threeMin2.default.WebGLRenderer();
         this.renderer.setSize(this.container.offsetWidth, this.container.offsetHeight);
 
+        this.viewportWidth = this.container.offsetWidth;
+        this.viewportHeight = this.container.offsetHeight;
+
         this.camera = new _camera.Camera(this.container);
 
         window.addEventListener('resize', function () {
 
-            _this.camera._camera.aspect = _this.container.offsetWidth / _this.container.offsetHeight;
-            _this.camera._camera.updateProjectionMatrix();
+            _this.camera.aspect = _this.container.offsetWidth / _this.container.offsetHeight;
 
             _this.renderer.setSize(_this.container.offsetWidth, _this.container.offsetHeight);
+
+            _this.viewportWidth = _this.container.offsetWidth;
+            _this.viewportHeight = _this.container.offsetHeight;
         }, false);
 
         // Our quadtrees for terrain LOD
@@ -4838,7 +4873,10 @@ var Engine = exports.Engine = function () {
 
             // TODO: Use box3's distanceToPoint instead
             var distance = this.camera.getDistanceTo(quad.centroid);
-            var rho = quad.error / distance;
+
+            // Screen space error
+            var rho = quad.error / distance * this.camera.perspectiveScalingFactor;
+
             rho = Math.round(rho * 1000) / 1000;
 
             // distance = 0 so screenspace error should be 0
@@ -4846,7 +4884,7 @@ var Engine = exports.Engine = function () {
                 rho = 0;
             }
             // Largest allowable screen error
-            var tau = 0.1;
+            var tau = 45;
 
             if (quad._isLeaf || rho <= tau) {
                 quad.visible = true;
