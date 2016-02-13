@@ -6,6 +6,6 @@ export class Planet {
         let generator = new TerrainGenerator(engine, radius, radius, HeightMapFuncs.SinRandom.func);
         generator.generate();
 
-        var faceAngle = new THREE.Euler( 0, 0, THREE.Math.degToRad(90), 'XYZ' );
+        var faceAngle = new THREE.Euler( 0, THREE.Math.degToRad(90), 0, 'XYZ' );
     }
 }

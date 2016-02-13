@@ -1,6 +1,7 @@
 import THREE from '../vendor/three.min.js'
 import { Camera } from '../modules/camera.js'
 import { Mesh } from '../modules/mesh.js'
+import { QuadGroup } from '../modules/quadgroup.js'
 import THREEx from '../vendor/threex.keyboardstate.js'
 
 export class Engine  {
@@ -50,13 +51,7 @@ export class Engine  {
 
     addQuadTree(quadRoot) {
 
-        let quadGroup = {
-            group: new THREE.Group(),
-            root: quadRoot,
-            quads: []
-        };
-
-
+        let quadGroup = new QuadGroup(quadRoot, this);
         let queue = [quadRoot];
         while (queue.length > 0) {
             let q = queue.shift();
@@ -73,12 +68,13 @@ export class Engine  {
 
             // Generate the vertices of mesh here, since we are now added to the engine
             q.generate();
-
         }
 
         this.add(quadGroup.group);
 
         this.quadGroups.push(quadGroup);
+
+        return quadGroup;
     }
 
     get domElement() {

@@ -4541,7 +4541,7 @@ engine.render();
 
 window.engine = engine;
 
-},{"./modules/controls.js":193,"./modules/engine.js":194,"./modules/terraingenerator.js":197,"./vendor/three.min.js":200,"babel-polyfill":1}],192:[function(require,module,exports){
+},{"./modules/controls.js":193,"./modules/engine.js":194,"./modules/terraingenerator.js":198,"./vendor/three.min.js":201,"babel-polyfill":1}],192:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -4633,7 +4633,7 @@ var Camera = exports.Camera = function () {
     return Camera;
 }();
 
-},{"../vendor/three.min.js":200,"../vendor/three.orbitcontrols.js":201}],193:[function(require,module,exports){
+},{"../vendor/three.min.js":201,"../vendor/three.orbitcontrols.js":202}],193:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -4664,7 +4664,7 @@ var Controls = exports.Controls = function () {
     return Controls;
 }();
 
-},{"../vendor/dat.gui.min.js":199}],194:[function(require,module,exports){
+},{"../vendor/dat.gui.min.js":200}],194:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -4681,6 +4681,8 @@ var _threeMin2 = _interopRequireDefault(_threeMin);
 var _camera = require('../modules/camera.js');
 
 var _mesh = require('../modules/mesh.js');
+
+var _quadgroup = require('../modules/quadgroup.js');
 
 var _threexKeyboardstate = require('../vendor/threex.keyboardstate.js');
 
@@ -4741,12 +4743,7 @@ var Engine = exports.Engine = function () {
         key: 'addQuadTree',
         value: function addQuadTree(quadRoot) {
 
-            var quadGroup = {
-                group: new _threeMin2.default.Group(),
-                root: quadRoot,
-                quads: []
-            };
-
+            var quadGroup = new _quadgroup.QuadGroup(quadRoot, this);
             var queue = [quadRoot];
             while (queue.length > 0) {
                 var q = queue.shift();
@@ -4768,6 +4765,8 @@ var Engine = exports.Engine = function () {
             this.add(quadGroup.group);
 
             this.quadGroups.push(quadGroup);
+
+            return quadGroup;
         }
     }, {
         key: 'drawQuads',
@@ -4903,7 +4902,7 @@ var Engine = exports.Engine = function () {
     return Engine;
 }();
 
-},{"../modules/camera.js":192,"../modules/mesh.js":196,"../vendor/three.min.js":200,"../vendor/threex.keyboardstate.js":202}],195:[function(require,module,exports){
+},{"../modules/camera.js":192,"../modules/mesh.js":196,"../modules/quadgroup.js":197,"../vendor/three.min.js":201,"../vendor/threex.keyboardstate.js":203}],195:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -4987,7 +4986,7 @@ var HeightMap = exports.HeightMap = function () {
     return HeightMap;
 }();
 
-},{"./util.js":198}],196:[function(require,module,exports){
+},{"./util.js":199}],196:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -5215,7 +5214,32 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
     return QuadMesh;
 }(TerrainMesh);
 
-},{"../vendor/three.min.js":200,"./heightmap.js":195,"./util.js":198}],197:[function(require,module,exports){
+},{"../vendor/three.min.js":201,"./heightmap.js":195,"./util.js":199}],197:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.QuadGroup = undefined;
+
+var _threeMin = require('../vendor/three.min.js');
+
+var _threeMin2 = _interopRequireDefault(_threeMin);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } } // Represents a THREE.Group of Quad Meshes
+
+var QuadGroup = exports.QuadGroup = function QuadGroup(quadRoot, engine) {
+    _classCallCheck(this, QuadGroup);
+
+    this.group = new _threeMin2.default.Group();
+    this.root = quadRoot;
+    this.quads = [];
+    this.engine = engine;
+};
+
+},{"../vendor/three.min.js":201}],198:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -5321,7 +5345,7 @@ var TerrainGenerator = exports.TerrainGenerator = function () {
     return TerrainGenerator;
 }();
 
-},{"../vendor/three.min.js":200,"./heightmap.js":195,"./mesh.js":196,"./util.js":198}],198:[function(require,module,exports){
+},{"../vendor/three.min.js":201,"./heightmap.js":195,"./mesh.js":196,"./util.js":199}],199:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5371,7 +5395,7 @@ function initArray(length) {
     return arr;
 }
 
-},{}],199:[function(require,module,exports){
+},{}],200:[function(require,module,exports){
 "use strict";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
@@ -6033,7 +6057,7 @@ dat.GUI = dat.gui.GUI = function (f, a, d, e, c, b, p, q, l, r, n, u, A, g, k) {
     };return d;
 }(dat.dom.dom, dat.utils.common), dat.dom.dom, dat.utils.common);
 
-},{}],200:[function(require,module,exports){
+},{}],201:[function(require,module,exports){
 // threejs.org/license
 'use strict';var THREE={REVISION:"73"};"function"===typeof define&&define.amd?define("three",THREE):"undefined"!==typeof exports&&"undefined"!==typeof module&&(module.exports=THREE);
 void 0!==self.requestAnimationFrame&&void 0!==self.cancelAnimationFrame||function(){for(var a=0,b=["ms","moz","webkit","o"],c=0;c<b.length&&!self.requestAnimationFrame;++c)self.requestAnimationFrame=self[b[c]+"RequestAnimationFrame"],self.cancelAnimationFrame=self[b[c]+"CancelAnimationFrame"]||self[b[c]+"CancelRequestAnimationFrame"];void 0===self.requestAnimationFrame&&void 0!==self.setTimeout&&(self.requestAnimationFrame=function(b){var c=Date.now(),g=Math.max(0,16-(c-a)),f=self.setTimeout(function(){b(c+
@@ -6905,7 +6929,7 @@ THREE.MorphBlendMesh.prototype.getAnimationDuration=function(a){var b=-1;if(a=th
 THREE.MorphBlendMesh.prototype.update=function(a){for(var b=0,c=this.animationsList.length;b<c;b++){var d=this.animationsList[b];if(d.active){var e=d.duration/d.length;d.time+=d.direction*a;if(d.mirroredLoop){if(d.time>d.duration||0>d.time)d.direction*=-1,d.time>d.duration&&(d.time=d.duration,d.directionBackwards=!0),0>d.time&&(d.time=0,d.directionBackwards=!1)}else d.time%=d.duration,0>d.time&&(d.time+=d.duration);var g=d.start+THREE.Math.clamp(Math.floor(d.time/e),0,d.length-1),f=d.weight;g!==d.currentFrame&&
 (this.morphTargetInfluences[d.lastFrame]=0,this.morphTargetInfluences[d.currentFrame]=1*f,this.morphTargetInfluences[g]=0,d.lastFrame=d.currentFrame,d.currentFrame=g);e=d.time%e/e;d.directionBackwards&&(e=1-e);d.currentFrame!==d.lastFrame?(this.morphTargetInfluences[d.currentFrame]=e*f,this.morphTargetInfluences[d.lastFrame]=(1-e)*f):this.morphTargetInfluences[d.currentFrame]=f}}};
 
-},{}],201:[function(require,module,exports){
+},{}],202:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7588,7 +7612,7 @@ _threeMin2.default.OrbitControls.prototype.constructor = _threeMin2.default.Orbi
 
 exports.default = _threeMin2.default.OrbitControls;
 
-},{"../vendor/three.min.js":200}],202:[function(require,module,exports){
+},{"../vendor/three.min.js":201}],203:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
