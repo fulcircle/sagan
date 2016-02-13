@@ -63,6 +63,9 @@ export class Engine  {
             q.visible = false;
             q._isLeaf = !q.children.length;
             queue.push(...q.children);
+            this.add(q);
+            // Generate the vertices of mesh here, since we are now added to the engine
+            q.generate();
         }
 
         this.quads.push(quadDict);

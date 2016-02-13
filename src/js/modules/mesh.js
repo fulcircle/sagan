@@ -76,16 +76,16 @@ export class TriangleMesh extends Mesh {
 
 export class TerrainMesh extends TriangleMesh {
 
-    constructor({width, height, heightMap=null, LOD=1, maxLOD=4}) {
+    constructor({width, height, position=new THREE.Vector3(), heightMap=null, LOD=1}) {
         super();
         this.width = width;
         this.height = height;
-        this.maxLOD = maxLOD;
 
         // Set heightMap before LOD so LOD calculates based on heightmap data
         this.heightMap = heightMap;
 
-        //this.LOD = LOD;
+        this.LOD = LOD;
+        this.position = position;
     }
 
     getHeight(x, y) {
@@ -99,7 +99,6 @@ export class TerrainMesh extends TriangleMesh {
     set LOD(level) {
         this._lod = level;
         this.stride = (this.width / this.LOD);
-        this.generate();
     }
 
     get LOD() {
@@ -140,13 +139,12 @@ export class TerrainMesh extends TriangleMesh {
 
         this.update(vertexPositions);
     }
-
 }
 
 export class QuadMesh extends TerrainMesh {
 
-    constructor({width, height, heightMap, LOD=1, maxLOD=4, error=0}) {
-        super({width, height, heightMap, LOD, maxLOD});
+    constructor({width, height, position=new THREE.Vector3(), heightMap, LOD=1, error=0}) {
+        super({width, height, position, heightMap, LOD});
         this.error = error;
         this.children = [];
     }

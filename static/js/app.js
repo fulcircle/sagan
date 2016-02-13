@@ -4754,6 +4754,9 @@ var Engine = exports.Engine = function () {
                 q.visible = false;
                 q._isLeaf = !q.children.length;
                 queue.push.apply(queue, _toConsumableArray(q.children));
+                this.add(q);
+                // Generate the vertices of mesh here, since we are now added to the engine
+                q.generate();
             }
 
             this.quads.push(quadDict);
@@ -5098,12 +5101,12 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
     function TerrainMesh(_ref) {
         var width = _ref.width;
         var height = _ref.height;
+        var _ref$position = _ref.position;
+        var position = _ref$position === undefined ? new _threeMin2.default.Vector3() : _ref$position;
         var _ref$heightMap = _ref.heightMap;
         var heightMap = _ref$heightMap === undefined ? null : _ref$heightMap;
         var _ref$LOD = _ref.LOD;
         var LOD = _ref$LOD === undefined ? 1 : _ref$LOD;
-        var _ref$maxLOD = _ref.maxLOD;
-        var maxLOD = _ref$maxLOD === undefined ? 4 : _ref$maxLOD;
 
         _classCallCheck(this, TerrainMesh);
 
@@ -5111,12 +5114,12 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
 
         _this2.width = width;
         _this2.height = height;
-        _this2.maxLOD = maxLOD;
 
         // Set heightMap before LOD so LOD calculates based on heightmap data
         _this2.heightMap = heightMap;
 
-        //this.LOD = LOD;
+        _this2.LOD = LOD;
+        _this2.position = position;
         return _this2;
     }
 
@@ -5169,7 +5172,6 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
         set: function set(level) {
             this._lod = level;
             this.stride = this.width / this.LOD;
-            this.generate();
         },
         get: function get() {
             return this._lod;
@@ -5185,17 +5187,17 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
     function QuadMesh(_ref2) {
         var width = _ref2.width;
         var height = _ref2.height;
+        var _ref2$position = _ref2.position;
+        var position = _ref2$position === undefined ? new _threeMin2.default.Vector3() : _ref2$position;
         var heightMap = _ref2.heightMap;
         var _ref2$LOD = _ref2.LOD;
         var LOD = _ref2$LOD === undefined ? 1 : _ref2$LOD;
-        var _ref2$maxLOD = _ref2.maxLOD;
-        var maxLOD = _ref2$maxLOD === undefined ? 4 : _ref2$maxLOD;
         var _ref2$error = _ref2.error;
         var error = _ref2$error === undefined ? 0 : _ref2$error;
 
         _classCallCheck(this, QuadMesh);
 
-        var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(QuadMesh).call(this, { width: width, height: height, heightMap: heightMap, LOD: LOD, maxLOD: maxLOD }));
+        var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(QuadMesh).call(this, { width: width, height: height, position: position, heightMap: heightMap, LOD: LOD }));
 
         _this3.error = error;
         _this3.children = [];
@@ -5253,20 +5255,18 @@ var TerrainGenerator = exports.TerrainGenerator = function () {
         this.rootQuad = new _mesh.QuadMesh({
             height: terrainHeight,
             width: terrainWidth,
+            position: new _threeMin2.default.Vector3(),
             heightMap: this.heightMap,
+            LOD: 1,
             error: terrainWidth
         });
 
         this.rootQuad.wireframe = true;
-        // TODO: Not ideal, have to set position and LOD afterwards and not as a parameter during instantiation
-        this.rootQuad.position = new _threeMin2.default.Vector3();
-        this.rootQuad.LOD = 1;
     }
 
     _createClass(TerrainGenerator, [{
         key: 'generate',
         value: function generate() {
-            this.engine.add(this.rootQuad);
             this.generateQuadTree(this.rootQuad);
             this.engine.addQuadTree(this.rootQuad);
         }
@@ -5292,6 +5292,7 @@ var TerrainGenerator = exports.TerrainGenerator = function () {
                 var quad = new _mesh.QuadMesh({
                     width: parentQuad.width * 0.5,
                     height: parentQuad.height * 0.5,
+                    position: new _threeMin2.default.Vector3(currX, currY, currZ),
                     LOD: LOD,
                     heightMap: parentQuad.heightMap,
                     error: parentQuad.error * 0.5
@@ -5300,11 +5301,6 @@ var TerrainGenerator = exports.TerrainGenerator = function () {
                 quad.wireframe = true;
 
                 parentQuad.children.push(quad);
-                this.engine.add(quad);
-
-                // TODO: Not ideal, have to set position and LOD afterwards and not as a parameter during instantiation
-                quad.position = new _threeMin2.default.Vector3(currX, currY, currZ);
-                quad.LOD = LOD;
 
                 currX = currX + xstride;
                 if (currX - parentQuad.position.x >= parentQuad.width) {

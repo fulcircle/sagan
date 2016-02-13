@@ -27,18 +27,17 @@ export class TerrainGenerator {
         this.rootQuad = new QuadMesh({
             height: terrainHeight,
             width: terrainWidth,
+            position: new THREE.Vector3(),
             heightMap: this.heightMap,
+            LOD: 1,
             error: terrainWidth
         });
 
         this.rootQuad.wireframe = true;
-        // TODO: Not ideal, have to set position and LOD afterwards and not as a parameter during instantiation
-        this.rootQuad.position = new THREE.Vector3();
-        this.rootQuad.LOD = 1;
+
     }
 
     generate() {
-        this.engine.add(this.rootQuad);
         this.generateQuadTree(this.rootQuad);
         this.engine.addQuadTree(this.rootQuad);
     }
@@ -61,6 +60,7 @@ export class TerrainGenerator {
             let quad = new QuadMesh({
                 width: parentQuad.width * 0.5,
                 height: parentQuad.height * 0.5,
+                position: new THREE.Vector3(currX, currY, currZ),
                 LOD: LOD,
                 heightMap: parentQuad.heightMap,
                 error: parentQuad.error * 0.5
@@ -69,11 +69,6 @@ export class TerrainGenerator {
             quad.wireframe = true;
 
             parentQuad.children.push(quad);
-            this.engine.add(quad);
-
-            // TODO: Not ideal, have to set position and LOD afterwards and not as a parameter during instantiation
-            quad.position = new THREE.Vector3(currX, currY, currZ);
-            quad.LOD = LOD;
 
             currX = currX + xstride;
             if ((currX - parentQuad.position.x) >= parentQuad.width) {
