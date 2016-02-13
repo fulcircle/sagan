@@ -25,7 +25,7 @@ export class Engine  {
         }, false );
 
         // Our quadtrees for terrain LOD
-        this.quads = [];
+        this.quadGroups = [];
 
         this.keyboard = new THREEx.KeyboardState();
 
@@ -50,25 +50,35 @@ export class Engine  {
 
     addQuadTree(quadRoot) {
 
-        let quadDict = {
+        let quadGroup = {
+            group: new THREE.Group(),
             root: quadRoot,
             quads: []
         };
+
 
         let queue = [quadRoot];
         while (queue.length > 0) {
             let q = queue.shift();
 
-            quadDict.quads.push(q);
+            quadGroup.quads.push(q);
+
             q.visible = false;
             q._isLeaf = !q.children.length;
+
             queue.push(...q.children);
-            this.add(q);
+
+            // Add this as a child of to a group in the scene, so transformations to the group will apply to this quad as well
+            quadGroup.group.add(q.mesh);
+
             // Generate the vertices of mesh here, since we are now added to the engine
             q.generate();
+
         }
 
-        this.quads.push(quadDict);
+        this.add(quadGroup.group);
+
+        this.quadGroups.push(quadGroup);
     }
 
     get domElement() {
@@ -76,7 +86,7 @@ export class Engine  {
     }
 
     drawQuads() {
-        for (let q of this.quads) {
+        for (let q of this.quadGroups) {
             q.quads.forEach((q) => {
                 q.visible = false;
             });

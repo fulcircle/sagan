@@ -20,6 +20,7 @@ export class Mesh {
     set visible(bool) {
         this.mesh.visible = bool;
     }
+
 }
 
 export class TriangleMesh extends Mesh {
@@ -148,5 +149,4 @@ export class QuadMesh extends TerrainMesh {
         this.error = error;
         this.children = [];
     }
-
 }

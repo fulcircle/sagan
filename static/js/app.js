@@ -4714,7 +4714,7 @@ var Engine = exports.Engine = function () {
         }, false);
 
         // Our quadtrees for terrain LOD
-        this.quads = [];
+        this.quadGroups = [];
 
         this.keyboard = new _threexKeyboardstate2.default.KeyboardState();
     }
@@ -4741,7 +4741,8 @@ var Engine = exports.Engine = function () {
         key: 'addQuadTree',
         value: function addQuadTree(quadRoot) {
 
-            var quadDict = {
+            var quadGroup = {
+                group: new _threeMin2.default.Group(),
                 root: quadRoot,
                 quads: []
             };
@@ -4750,16 +4751,23 @@ var Engine = exports.Engine = function () {
             while (queue.length > 0) {
                 var q = queue.shift();
 
-                quadDict.quads.push(q);
+                quadGroup.quads.push(q);
+
                 q.visible = false;
                 q._isLeaf = !q.children.length;
+
                 queue.push.apply(queue, _toConsumableArray(q.children));
-                this.add(q);
+
+                // Add this as a child of to a group in the scene, so transformations to the group will apply to this quad as well
+                quadGroup.group.add(q.mesh);
+
                 // Generate the vertices of mesh here, since we are now added to the engine
                 q.generate();
             }
 
-            this.quads.push(quadDict);
+            this.add(quadGroup.group);
+
+            this.quadGroups.push(quadGroup);
         }
     }, {
         key: 'drawQuads',
@@ -4769,7 +4777,7 @@ var Engine = exports.Engine = function () {
             var _iteratorError = undefined;
 
             try {
-                for (var _iterator = this.quads[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                for (var _iterator = this.quadGroups[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                     var q = _step.value;
 
                     q.quads.forEach(function (q) {
