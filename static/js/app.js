@@ -4510,15 +4510,11 @@ process.umask = function() { return 0; };
 
 require('babel-polyfill');
 
-var _mesh = require('./modules/mesh.js');
+var _controls = require('./modules/controls.js');
 
 var _engine = require('./modules/engine.js');
 
-var _controls = require('./modules/controls.js');
-
-var _heightmap = require('./modules/heightmap.js');
-
-var _util = require('./modules/util.js');
+var _terraingenerator = require('./modules/terraingenerator.js');
 
 var _threeMin = require('./vendor/three.min.js');
 
@@ -4529,76 +4525,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var engine = new _engine.Engine(document.body);
 document.body.appendChild(engine.domElement);
 
-var random = (0, _util.randomNumber)(0, 2);
-var heightMapFunc = function heightMapFunc(x, y) {
-    return 3 * Math.sin(0.1 * x) + 3 * Math.sin(0.1 * y) + random.next().value;
-};
+//let controls = new Controls();
+//controls.addControl(quad, 'LOD').min(1).max(4).step(1);
 
 var TERRAIN_HEIGHT = 256;
 var TERRAIN_WIDTH = 256;
 
-// Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
-var heightMap = new _heightmap.HeightMap(TERRAIN_WIDTH + 1, TERRAIN_HEIGHT + 1, heightMapFunc);
-
-var quad = new _mesh.QuadMesh({
-    height: TERRAIN_HEIGHT,
-    width: TERRAIN_WIDTH,
-    heightMap: heightMap,
-    error: 256
-});
-
-quad.wireframe = true;
-engine.add(quad);
-quad.position = new _threeMin2.default.Vector3();
-quad.LOD = 1;
-
-//let controls = new Controls();
-//controls.addControl(quad, 'LOD').min(1).max(4).step(1);
-
-generateQuadTree(quad);
-
-// TODO: Convert into breadth-first generation of tree
-function generateQuadTree(parent_quad) {
-    if (parent_quad.LOD > 6) {
-        return;
-    }
-    var currX = parent_quad.position.x;
-    var currY = parent_quad.position.y;
-    var currZ = parent_quad.position.z;
-
-    var xstride = parent_quad.width * 0.5;
-    var ystride = parent_quad.height * 0.5;
-
-    var LOD = parent_quad.LOD + 1;
-
-    for (var i = 0; i < 4; i++) {
-        var _quad = new _mesh.QuadMesh({
-            width: parent_quad.width * 0.5,
-            height: parent_quad.height * 0.5,
-            LOD: LOD,
-            heightMap: parent_quad.heightMap,
-            error: parent_quad.error * 0.5
-        });
-
-        _quad.wireframe = true;
-
-        //quad.position = new THREE.Vector3(currX, currY, currZ);
-
-        parent_quad.children.push(_quad);
-        engine.add(_quad);
-        _quad.position = new _threeMin2.default.Vector3(currX, currY, currZ);
-        _quad.LOD = LOD;
-
-        currX = currX + xstride;
-        if (currX - parent_quad.position.x >= parent_quad.width) {
-            currX = parent_quad.position.x;
-            currY = currY + ystride;
-        }
-        generateQuadTree(_quad);
-    }
-}
-
-engine.addQuadTree(quad);
+var generator = new _terraingenerator.TerrainGenerator(engine, TERRAIN_HEIGHT, TERRAIN_WIDTH, _terraingenerator.HeightMapFuncs.SinRandom.func);
+generator.generate();
 
 engine.camera.position = new _threeMin2.default.Vector3(TERRAIN_WIDTH / 2, TERRAIN_HEIGHT / 2, 20);
 engine.camera.focus(new _threeMin2.default.Vector3(TERRAIN_WIDTH / 2, TERRAIN_HEIGHT / 2, 0));
@@ -4607,7 +4541,7 @@ engine.render();
 
 window.engine = engine;
 
-},{"./modules/controls.js":193,"./modules/engine.js":194,"./modules/heightmap.js":195,"./modules/mesh.js":196,"./modules/util.js":197,"./vendor/three.min.js":199,"babel-polyfill":1}],192:[function(require,module,exports){
+},{"./modules/controls.js":193,"./modules/engine.js":194,"./modules/terraingenerator.js":197,"./vendor/three.min.js":200,"babel-polyfill":1}],192:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -4699,7 +4633,7 @@ var Camera = exports.Camera = function () {
     return Camera;
 }();
 
-},{"../vendor/three.min.js":199,"../vendor/three.orbitcontrols.js":200}],193:[function(require,module,exports){
+},{"../vendor/three.min.js":200,"../vendor/three.orbitcontrols.js":201}],193:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -4730,7 +4664,7 @@ var Controls = exports.Controls = function () {
     return Controls;
 }();
 
-},{"../vendor/dat.gui.min.js":198}],194:[function(require,module,exports){
+},{"../vendor/dat.gui.min.js":199}],194:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -4770,9 +4704,6 @@ var Engine = exports.Engine = function () {
         this.renderer = new _threeMin2.default.WebGLRenderer();
         this.renderer.setSize(this.container.offsetWidth, this.container.offsetHeight);
 
-        this.viewportWidth = this.container.offsetWidth;
-        this.viewportHeight = this.container.offsetHeight;
-
         this.camera = new _camera.Camera(this.container);
 
         window.addEventListener('resize', function () {
@@ -4780,9 +4711,6 @@ var Engine = exports.Engine = function () {
             _this.camera.aspect = _this.container.offsetWidth / _this.container.offsetHeight;
 
             _this.renderer.setSize(_this.container.offsetWidth, _this.container.offsetHeight);
-
-            _this.viewportWidth = _this.container.offsetWidth;
-            _this.viewportHeight = _this.container.offsetHeight;
         }, false);
 
         // Our quadtrees for terrain LOD
@@ -4877,8 +4805,6 @@ var Engine = exports.Engine = function () {
             // Screen space error
             var rho = quad.error / distance * this.camera.perspectiveScalingFactor;
 
-            rho = Math.round(rho * 1000) / 1000;
-
             // distance = 0 so screenspace error should be 0
             if (!isFinite(rho)) {
                 rho = 0;
@@ -4920,6 +4846,7 @@ var Engine = exports.Engine = function () {
         key: 'handleKeyboard',
         value: function handleKeyboard() {
 
+            // TODO: Redo controls
             if (this.keyboard.pressed('w')) {
                 this.camera.position.y += 1;
                 var focus = new _threeMin2.default.Vector3(this.camera.position.x, this.camera.position.y, 0);
@@ -4965,7 +4892,7 @@ var Engine = exports.Engine = function () {
     return Engine;
 }();
 
-},{"../modules/camera.js":192,"../modules/mesh.js":196,"../vendor/three.min.js":199,"../vendor/threex.keyboardstate.js":201}],195:[function(require,module,exports){
+},{"../modules/camera.js":192,"../modules/mesh.js":196,"../vendor/three.min.js":200,"../vendor/threex.keyboardstate.js":202}],195:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -5049,7 +4976,7 @@ var HeightMap = exports.HeightMap = function () {
     return HeightMap;
 }();
 
-},{"./util.js":197}],196:[function(require,module,exports){
+},{"./util.js":198}],196:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -5189,7 +5116,7 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
         // Set heightMap before LOD so LOD calculates based on heightmap data
         _this2.heightMap = heightMap;
 
-        //this.LOD = LOD;
+        _this2.LOD = LOD;
         return _this2;
     }
 
@@ -5278,7 +5205,118 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
     return QuadMesh;
 }(TerrainMesh);
 
-},{"../vendor/three.min.js":199,"./heightmap.js":195,"./util.js":197}],197:[function(require,module,exports){
+},{"../vendor/three.min.js":200,"./heightmap.js":195,"./util.js":198}],197:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.TerrainGenerator = exports.HeightMapFuncs = undefined;
+
+var _threeMin = require('../vendor/three.min.js');
+
+var _threeMin2 = _interopRequireDefault(_threeMin);
+
+var _util = require('./util.js');
+
+var _heightmap = require('./heightmap.js');
+
+var _mesh = require('./mesh.js');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var HeightMapFuncs = exports.HeightMapFuncs = {
+    SinRandom: {
+        random: (0, _util.randomNumber)(0, 2),
+        func: function func(x, y) {
+            // TODO: Can't use 'this' keyword here.. wtf?
+            return 3 * Math.sin(0.1 * x) + 3 * Math.sin(0.1 * y) + HeightMapFuncs.SinRandom.random.next().value;
+        }
+    }
+};
+
+var TerrainGenerator = exports.TerrainGenerator = function () {
+    function TerrainGenerator(engine, terrainHeight, terrainWidth, heightMapFunc) {
+        _classCallCheck(this, TerrainGenerator);
+
+        this.engine = engine;
+        this.terrainHeight = terrainHeight;
+        this.terrainWidth = terrainWidth;
+
+        // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
+        this.heightMap = new _heightmap.HeightMap(terrainHeight + 1, terrainWidth + 1, heightMapFunc);
+
+        this.rootQuad = new _mesh.QuadMesh({
+            height: terrainHeight,
+            width: terrainWidth,
+            heightMap: this.heightMap,
+            error: 256
+        });
+
+        this.rootQuad.wireframe = true;
+        this.rootQuad.position = new _threeMin2.default.Vector3();
+        this.rootQuad.LOD = 1;
+    }
+
+    _createClass(TerrainGenerator, [{
+        key: 'generate',
+        value: function generate() {
+            this.engine.add(this.rootQuad);
+            this.generateQuadTree(this.rootQuad);
+            this.engine.addQuadTree(this.rootQuad);
+        }
+
+        // TODO: Convert into breadth-first generation of tree
+
+    }, {
+        key: 'generateQuadTree',
+        value: function generateQuadTree(parentQuad) {
+            if (parentQuad.LOD > 6) {
+                return;
+            }
+            var currX = parentQuad.position.x;
+            var currY = parentQuad.position.y;
+            var currZ = parentQuad.position.z;
+
+            var xstride = parentQuad.width * 0.5;
+            var ystride = parentQuad.height * 0.5;
+
+            var LOD = parentQuad.LOD + 1;
+
+            for (var i = 0; i < 4; i++) {
+                var quad = new _mesh.QuadMesh({
+                    width: parentQuad.width * 0.5,
+                    height: parentQuad.height * 0.5,
+                    LOD: LOD,
+                    heightMap: parentQuad.heightMap,
+                    error: parentQuad.error * 0.5
+                });
+
+                quad.wireframe = true;
+
+                parentQuad.children.push(quad);
+                this.engine.add(quad);
+                quad.position = new _threeMin2.default.Vector3(currX, currY, currZ);
+                quad.LOD = LOD;
+
+                currX = currX + xstride;
+                if (currX - parentQuad.position.x >= parentQuad.width) {
+                    currX = parentQuad.position.x;
+                    currY = currY + ystride;
+                }
+                this.generateQuadTree(quad);
+            }
+        }
+    }]);
+
+    return TerrainGenerator;
+}();
+
+},{"../vendor/three.min.js":200,"./heightmap.js":195,"./mesh.js":196,"./util.js":198}],198:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5328,7 +5366,7 @@ function initArray(length) {
     return arr;
 }
 
-},{}],198:[function(require,module,exports){
+},{}],199:[function(require,module,exports){
 "use strict";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
@@ -5990,7 +6028,7 @@ dat.GUI = dat.gui.GUI = function (f, a, d, e, c, b, p, q, l, r, n, u, A, g, k) {
     };return d;
 }(dat.dom.dom, dat.utils.common), dat.dom.dom, dat.utils.common);
 
-},{}],199:[function(require,module,exports){
+},{}],200:[function(require,module,exports){
 // threejs.org/license
 'use strict';var THREE={REVISION:"73"};"function"===typeof define&&define.amd?define("three",THREE):"undefined"!==typeof exports&&"undefined"!==typeof module&&(module.exports=THREE);
 void 0!==self.requestAnimationFrame&&void 0!==self.cancelAnimationFrame||function(){for(var a=0,b=["ms","moz","webkit","o"],c=0;c<b.length&&!self.requestAnimationFrame;++c)self.requestAnimationFrame=self[b[c]+"RequestAnimationFrame"],self.cancelAnimationFrame=self[b[c]+"CancelAnimationFrame"]||self[b[c]+"CancelRequestAnimationFrame"];void 0===self.requestAnimationFrame&&void 0!==self.setTimeout&&(self.requestAnimationFrame=function(b){var c=Date.now(),g=Math.max(0,16-(c-a)),f=self.setTimeout(function(){b(c+
@@ -6862,7 +6900,7 @@ THREE.MorphBlendMesh.prototype.getAnimationDuration=function(a){var b=-1;if(a=th
 THREE.MorphBlendMesh.prototype.update=function(a){for(var b=0,c=this.animationsList.length;b<c;b++){var d=this.animationsList[b];if(d.active){var e=d.duration/d.length;d.time+=d.direction*a;if(d.mirroredLoop){if(d.time>d.duration||0>d.time)d.direction*=-1,d.time>d.duration&&(d.time=d.duration,d.directionBackwards=!0),0>d.time&&(d.time=0,d.directionBackwards=!1)}else d.time%=d.duration,0>d.time&&(d.time+=d.duration);var g=d.start+THREE.Math.clamp(Math.floor(d.time/e),0,d.length-1),f=d.weight;g!==d.currentFrame&&
 (this.morphTargetInfluences[d.lastFrame]=0,this.morphTargetInfluences[d.currentFrame]=1*f,this.morphTargetInfluences[g]=0,d.lastFrame=d.currentFrame,d.currentFrame=g);e=d.time%e/e;d.directionBackwards&&(e=1-e);d.currentFrame!==d.lastFrame?(this.morphTargetInfluences[d.currentFrame]=e*f,this.morphTargetInfluences[d.lastFrame]=(1-e)*f):this.morphTargetInfluences[d.currentFrame]=f}}};
 
-},{}],200:[function(require,module,exports){
+},{}],201:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7545,7 +7583,7 @@ _threeMin2.default.OrbitControls.prototype.constructor = _threeMin2.default.Orbi
 
 exports.default = _threeMin2.default.OrbitControls;
 
-},{"../vendor/three.min.js":199}],201:[function(require,module,exports){
+},{"../vendor/three.min.js":200}],202:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

@@ -12,9 +12,6 @@ export class Engine  {
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(this.container.offsetWidth, this.container.offsetHeight);
 
-        this.viewportWidth = this.container.offsetWidth;
-        this.viewportHeight = this.container.offsetHeight;
-
         this.camera = new Camera(this.container);
 
 
@@ -24,9 +21,6 @@ export class Engine  {
 
 
             this.renderer.setSize( this.container.offsetWidth, this.container.offsetHeight );
-
-            this.viewportWidth = this.container.offsetWidth;
-            this.viewportHeight = this.container.offsetHeight;
 
         }, false );
 
@@ -99,8 +93,6 @@ export class Engine  {
         // Screen space error
         let rho = (quad.error / distance) * this.camera.perspectiveScalingFactor;
 
-        rho = Math.round(rho * 1000) / 1000;
-
         // distance = 0 so screenspace error should be 0
         if (!isFinite(rho)) {
             rho = 0;
@@ -120,6 +112,7 @@ export class Engine  {
 
     handleKeyboard() {
 
+        // TODO: Redo controls
         if (this.keyboard.pressed('w')) {
             this.camera.position.y += 1;
             let focus = new THREE.Vector3(this.camera.position.x, this.camera.position.y, 0);
