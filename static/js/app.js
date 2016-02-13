@@ -4528,8 +4528,8 @@ document.body.appendChild(engine.domElement);
 //let controls = new Controls();
 //controls.addControl(quad, 'LOD').min(1).max(4).step(1);
 
-var TERRAIN_HEIGHT = 256;
-var TERRAIN_WIDTH = 256;
+var TERRAIN_HEIGHT = 128;
+var TERRAIN_WIDTH = 128;
 
 var generator = new _terraingenerator.TerrainGenerator(engine, TERRAIN_HEIGHT, TERRAIN_WIDTH, _terraingenerator.HeightMapFuncs.SinRandom.func);
 generator.generate();
@@ -4799,7 +4799,7 @@ var Engine = exports.Engine = function () {
         key: 'chunkedLOD',
         value: function chunkedLOD(quad) {
 
-            // TODO: Use box3's distanceToPoint instead
+            // TODO: Need to get distance to nearest face, not centroid
             var distance = this.camera.getDistanceTo(quad.centroid);
 
             // Screen space error
@@ -5116,7 +5116,7 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
         // Set heightMap before LOD so LOD calculates based on heightmap data
         _this2.heightMap = heightMap;
 
-        _this2.LOD = LOD;
+        //this.LOD = LOD;
         return _this2;
     }
 
@@ -5254,10 +5254,11 @@ var TerrainGenerator = exports.TerrainGenerator = function () {
             height: terrainHeight,
             width: terrainWidth,
             heightMap: this.heightMap,
-            error: 256
+            error: terrainWidth
         });
 
         this.rootQuad.wireframe = true;
+        // TODO: Not ideal, have to set position and LOD afterwards and not as a parameter during instantiation
         this.rootQuad.position = new _threeMin2.default.Vector3();
         this.rootQuad.LOD = 1;
     }
@@ -5300,6 +5301,8 @@ var TerrainGenerator = exports.TerrainGenerator = function () {
 
                 parentQuad.children.push(quad);
                 this.engine.add(quad);
+
+                // TODO: Not ideal, have to set position and LOD afterwards and not as a parameter during instantiation
                 quad.position = new _threeMin2.default.Vector3(currX, currY, currZ);
                 quad.LOD = LOD;
 

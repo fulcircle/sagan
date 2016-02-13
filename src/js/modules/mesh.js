@@ -85,7 +85,7 @@ export class TerrainMesh extends TriangleMesh {
         // Set heightMap before LOD so LOD calculates based on heightmap data
         this.heightMap = heightMap;
 
-        this.LOD = LOD;
+        //this.LOD = LOD;
     }
 
     getHeight(x, y) {

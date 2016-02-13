@@ -87,7 +87,7 @@ export class Engine  {
     // Breadth-first search of quadtree?
     chunkedLOD(quad) {
 
-        // TODO: Use box3's distanceToPoint instead
+        // TODO: Need to get distance to nearest face, not centroid
         let distance = this.camera.getDistanceTo(quad.centroid);
 
         // Screen space error

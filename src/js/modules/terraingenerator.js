@@ -28,10 +28,11 @@ export class TerrainGenerator {
             height: terrainHeight,
             width: terrainWidth,
             heightMap: this.heightMap,
-            error: 256
+            error: terrainWidth
         });
 
         this.rootQuad.wireframe = true;
+        // TODO: Not ideal, have to set position and LOD afterwards and not as a parameter during instantiation
         this.rootQuad.position = new THREE.Vector3();
         this.rootQuad.LOD = 1;
     }
@@ -69,6 +70,8 @@ export class TerrainGenerator {
 
             parentQuad.children.push(quad);
             this.engine.add(quad);
+
+            // TODO: Not ideal, have to set position and LOD afterwards and not as a parameter during instantiation
             quad.position = new THREE.Vector3(currX, currY, currZ);
             quad.LOD = LOD;
 

@@ -10,8 +10,8 @@ document.body.appendChild(engine.domElement);
 //let controls = new Controls();
 //controls.addControl(quad, 'LOD').min(1).max(4).step(1);
 
-let TERRAIN_HEIGHT = 256;
-let TERRAIN_WIDTH = 256;
+let TERRAIN_HEIGHT = 128;
+let TERRAIN_WIDTH = 128;
 
 let generator = new TerrainGenerator(engine, TERRAIN_HEIGHT, TERRAIN_WIDTH, HeightMapFuncs.SinRandom.func);
 generator.generate();
