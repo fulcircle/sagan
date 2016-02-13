@@ -39,7 +39,8 @@ export class TerrainGenerator {
 
     generate() {
         this.generateQuadTree(this.rootQuad);
-        this.engine.addQuadTree(this.rootQuad);
+        // Returns a QuadGroup which encapsulates a THREE.Group which we can manipulate in the scene
+        return this.engine.addQuadTree(this.rootQuad);
     }
 
     // TODO: Convert into breadth-first generation of tree
