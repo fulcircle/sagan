@@ -54,14 +54,12 @@ export class TerrainGenerator {
         let xstride = parentQuad.width * 0.5;
         let ystride = parentQuad.height * 0.5;
 
-        let LOD = parentQuad.LOD + 1;
-
         for (var i = 0; i < 4; i++) {
             let quad = new QuadMesh({
                 width: parentQuad.width * 0.5,
                 height: parentQuad.height * 0.5,
                 position: new THREE.Vector3(currX, currY, currZ),
-                LOD: LOD,
+                LOD: parentQuad.LOD + 1,
                 heightMap: parentQuad.heightMap,
                 error: parentQuad.error * 0.5
             });

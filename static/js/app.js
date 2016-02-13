@@ -5294,14 +5294,12 @@ var TerrainGenerator = exports.TerrainGenerator = function () {
             var xstride = parentQuad.width * 0.5;
             var ystride = parentQuad.height * 0.5;
 
-            var LOD = parentQuad.LOD + 1;
-
             for (var i = 0; i < 4; i++) {
                 var quad = new _mesh.QuadMesh({
                     width: parentQuad.width * 0.5,
                     height: parentQuad.height * 0.5,
                     position: new _threeMin2.default.Vector3(currX, currY, currZ),
-                    LOD: LOD,
+                    LOD: parentQuad.LOD + 1,
                     heightMap: parentQuad.heightMap,
                     error: parentQuad.error * 0.5
                 });
