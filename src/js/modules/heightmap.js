@@ -1,4 +1,4 @@
-import { initArray } from './util.js'
+import { initArray } from './Util.js'
 
 export class HeightMap {
 

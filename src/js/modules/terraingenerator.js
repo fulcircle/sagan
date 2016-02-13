@@ -1,7 +1,7 @@
 import THREE from '../vendor/three.min.js'
-import { randomNumber } from './util.js'
-import { HeightMap } from './heightmap.js'
-import { QuadMesh } from './mesh.js'
+import { randomNumber } from './Util.js'
+import { HeightMap } from './HeightMap.js'
+import { QuadMesh } from './Mesh.js'
 
 export const HeightMapFuncs = {
     SinRandom:  {

@@ -1,6 +1,6 @@
 import THREE from '../vendor/three.min.js'
-import { HeightMap } from './heightmap.js'
-import { randomNumber } from './util.js'
+import { HeightMap } from './HeightMap.js'
+import { randomNumber } from './Util.js'
 
 // Abstract
 export class Mesh {

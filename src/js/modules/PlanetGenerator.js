@@ -1,6 +1,6 @@
 import THREE from '../vendor/three.min.js';
-import { TerrainGenerator } from './terraingenerator.js';
-import { HeightMapFuncs } from './terraingenerator.js';
+import { TerrainGenerator } from './TerrainGenerator.js';
+import { HeightMapFuncs } from './TerrainGenerator.js';
 
 export class PlanetGenerator {
 

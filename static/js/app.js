@@ -4543,7 +4543,7 @@ engine.render();
 
 window.engine = engine;
 
-},{"./modules/PlanetGenerator.js":192,"./modules/controls.js":194,"./modules/engine.js":195,"./vendor/three.min.js":202,"babel-polyfill":1}],192:[function(require,module,exports){
+},{"./modules/PlanetGenerator.js":192,"./modules/controls.js":195,"./modules/engine.js":196,"./vendor/three.min.js":202,"babel-polyfill":1}],192:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4555,7 +4555,7 @@ var _threeMin = require('../vendor/three.min.js');
 
 var _threeMin2 = _interopRequireDefault(_threeMin);
 
-var _terraingenerator = require('./terraingenerator.js');
+var _TerrainGenerator = require('./TerrainGenerator.js');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4564,13 +4564,120 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var PlanetGenerator = exports.PlanetGenerator = function PlanetGenerator(engine, radius) {
     _classCallCheck(this, PlanetGenerator);
 
-    var generator = new _terraingenerator.TerrainGenerator(engine, radius, radius, _terraingenerator.HeightMapFuncs.SinRandom.func);
+    var generator = new _TerrainGenerator.TerrainGenerator(engine, radius, radius, _TerrainGenerator.HeightMapFuncs.SinRandom.func);
     var quadGroup = generator.generate();
 
     var faceAngle = new _threeMin2.default.Euler(0, _threeMin2.default.Math.degToRad(90), 0, 'XYZ');
 };
 
-},{"../vendor/three.min.js":202,"./terraingenerator.js":199}],193:[function(require,module,exports){
+},{"../vendor/three.min.js":202,"./TerrainGenerator.js":193}],193:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.TerrainGenerator = exports.HeightMapFuncs = undefined;
+
+var _threeMin = require('../vendor/three.min.js');
+
+var _threeMin2 = _interopRequireDefault(_threeMin);
+
+var _util = require('./util.js');
+
+var _heightmap = require('./heightmap.js');
+
+var _mesh = require('./mesh.js');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var HeightMapFuncs = exports.HeightMapFuncs = {
+    SinRandom: {
+        random: (0, _util.randomNumber)(0, 2),
+        func: function func(x, y) {
+            // TODO: Can't use 'this' keyword here.. wtf?
+            return 3 * Math.sin(0.1 * x) + 3 * Math.sin(0.1 * y) + HeightMapFuncs.SinRandom.random.next().value;
+        }
+    }
+};
+
+var TerrainGenerator = exports.TerrainGenerator = function () {
+    function TerrainGenerator(engine, terrainHeight, terrainWidth, heightMapFunc) {
+        _classCallCheck(this, TerrainGenerator);
+
+        this.engine = engine;
+        this.terrainHeight = terrainHeight;
+        this.terrainWidth = terrainWidth;
+
+        // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
+        this.heightMap = new _heightmap.HeightMap(terrainHeight + 1, terrainWidth + 1, heightMapFunc);
+
+        this.rootQuad = new _mesh.QuadMesh({
+            height: terrainHeight,
+            width: terrainWidth,
+            position: new _threeMin2.default.Vector3(),
+            heightMap: this.heightMap,
+            LOD: 1,
+            error: terrainWidth
+        });
+
+        this.rootQuad.wireframe = true;
+    }
+
+    _createClass(TerrainGenerator, [{
+        key: 'generate',
+        value: function generate() {
+            this.generateQuadTree(this.rootQuad);
+            // Returns a QuadGroup which encapsulates a THREE.Group which we can manipulate in the scene
+            return this.engine.addQuadTree(this.rootQuad);
+        }
+
+        // TODO: Convert into breadth-first generation of tree
+
+    }, {
+        key: 'generateQuadTree',
+        value: function generateQuadTree(parentQuad) {
+            if (parentQuad.LOD > 6) {
+                return;
+            }
+            var currX = parentQuad.position.x;
+            var currY = parentQuad.position.y;
+            var currZ = parentQuad.position.z;
+
+            var xstride = parentQuad.width * 0.5;
+            var ystride = parentQuad.height * 0.5;
+
+            for (var i = 0; i < 4; i++) {
+                var quad = new _mesh.QuadMesh({
+                    width: parentQuad.width * 0.5,
+                    height: parentQuad.height * 0.5,
+                    position: new _threeMin2.default.Vector3(currX, currY, currZ),
+                    LOD: parentQuad.LOD + 1,
+                    heightMap: parentQuad.heightMap,
+                    error: parentQuad.error * 0.5
+                });
+
+                quad.wireframe = true;
+
+                parentQuad.children.push(quad);
+
+                currX = currX + xstride;
+                if (currX - parentQuad.position.x >= parentQuad.width) {
+                    currX = parentQuad.position.x;
+                    currY = currY + ystride;
+                }
+                this.generateQuadTree(quad);
+            }
+        }
+    }]);
+
+    return TerrainGenerator;
+}();
+
+},{"../vendor/three.min.js":202,"./heightmap.js":197,"./mesh.js":198,"./util.js":200}],194:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -4662,7 +4769,7 @@ var Camera = exports.Camera = function () {
     return Camera;
 }();
 
-},{"../vendor/three.min.js":202,"../vendor/three.orbitcontrols.js":203}],194:[function(require,module,exports){
+},{"../vendor/three.min.js":202,"../vendor/three.orbitcontrols.js":203}],195:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -4693,7 +4800,7 @@ var Controls = exports.Controls = function () {
     return Controls;
 }();
 
-},{"../vendor/dat.gui.min.js":201}],195:[function(require,module,exports){
+},{"../vendor/dat.gui.min.js":201}],196:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -4931,7 +5038,7 @@ var Engine = exports.Engine = function () {
     return Engine;
 }();
 
-},{"../modules/camera.js":193,"../modules/mesh.js":197,"../modules/quadgroup.js":198,"../vendor/three.min.js":202,"../vendor/threex.keyboardstate.js":204}],196:[function(require,module,exports){
+},{"../modules/camera.js":194,"../modules/mesh.js":198,"../modules/quadgroup.js":199,"../vendor/three.min.js":202,"../vendor/threex.keyboardstate.js":204}],197:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -5015,7 +5122,7 @@ var HeightMap = exports.HeightMap = function () {
     return HeightMap;
 }();
 
-},{"./util.js":200}],197:[function(require,module,exports){
+},{"./util.js":200}],198:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -5243,7 +5350,7 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
     return QuadMesh;
 }(TerrainMesh);
 
-},{"../vendor/three.min.js":202,"./heightmap.js":196,"./util.js":200}],198:[function(require,module,exports){
+},{"../vendor/three.min.js":202,"./heightmap.js":197,"./util.js":200}],199:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5268,114 +5375,7 @@ var QuadGroup = exports.QuadGroup = function QuadGroup(quadRoot, engine) {
     this.engine = engine;
 };
 
-},{"../vendor/three.min.js":202}],199:[function(require,module,exports){
-'use strict';
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.TerrainGenerator = exports.HeightMapFuncs = undefined;
-
-var _threeMin = require('../vendor/three.min.js');
-
-var _threeMin2 = _interopRequireDefault(_threeMin);
-
-var _util = require('./util.js');
-
-var _heightmap = require('./heightmap.js');
-
-var _mesh = require('./mesh.js');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var HeightMapFuncs = exports.HeightMapFuncs = {
-    SinRandom: {
-        random: (0, _util.randomNumber)(0, 2),
-        func: function func(x, y) {
-            // TODO: Can't use 'this' keyword here.. wtf?
-            return 3 * Math.sin(0.1 * x) + 3 * Math.sin(0.1 * y) + HeightMapFuncs.SinRandom.random.next().value;
-        }
-    }
-};
-
-var TerrainGenerator = exports.TerrainGenerator = function () {
-    function TerrainGenerator(engine, terrainHeight, terrainWidth, heightMapFunc) {
-        _classCallCheck(this, TerrainGenerator);
-
-        this.engine = engine;
-        this.terrainHeight = terrainHeight;
-        this.terrainWidth = terrainWidth;
-
-        // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
-        this.heightMap = new _heightmap.HeightMap(terrainHeight + 1, terrainWidth + 1, heightMapFunc);
-
-        this.rootQuad = new _mesh.QuadMesh({
-            height: terrainHeight,
-            width: terrainWidth,
-            position: new _threeMin2.default.Vector3(),
-            heightMap: this.heightMap,
-            LOD: 1,
-            error: terrainWidth
-        });
-
-        this.rootQuad.wireframe = true;
-    }
-
-    _createClass(TerrainGenerator, [{
-        key: 'generate',
-        value: function generate() {
-            this.generateQuadTree(this.rootQuad);
-            // Returns a QuadGroup which encapsulates a THREE.Group which we can manipulate in the scene
-            return this.engine.addQuadTree(this.rootQuad);
-        }
-
-        // TODO: Convert into breadth-first generation of tree
-
-    }, {
-        key: 'generateQuadTree',
-        value: function generateQuadTree(parentQuad) {
-            if (parentQuad.LOD > 6) {
-                return;
-            }
-            var currX = parentQuad.position.x;
-            var currY = parentQuad.position.y;
-            var currZ = parentQuad.position.z;
-
-            var xstride = parentQuad.width * 0.5;
-            var ystride = parentQuad.height * 0.5;
-
-            for (var i = 0; i < 4; i++) {
-                var quad = new _mesh.QuadMesh({
-                    width: parentQuad.width * 0.5,
-                    height: parentQuad.height * 0.5,
-                    position: new _threeMin2.default.Vector3(currX, currY, currZ),
-                    LOD: parentQuad.LOD + 1,
-                    heightMap: parentQuad.heightMap,
-                    error: parentQuad.error * 0.5
-                });
-
-                quad.wireframe = true;
-
-                parentQuad.children.push(quad);
-
-                currX = currX + xstride;
-                if (currX - parentQuad.position.x >= parentQuad.width) {
-                    currX = parentQuad.position.x;
-                    currY = currY + ystride;
-                }
-                this.generateQuadTree(quad);
-            }
-        }
-    }]);
-
-    return TerrainGenerator;
-}();
-
-},{"../vendor/three.min.js":202,"./heightmap.js":196,"./mesh.js":197,"./util.js":200}],200:[function(require,module,exports){
+},{"../vendor/three.min.js":202}],200:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

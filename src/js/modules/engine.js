@@ -1,7 +1,7 @@
 import THREE from '../vendor/three.min.js'
-import { Camera } from '../modules/camera.js'
-import { Mesh } from '../modules/mesh.js'
-import { QuadGroup } from '../modules/quadgroup.js'
+import { Camera } from 'Camera.js'
+import { Mesh } from 'Mesh.js'
+import { QuadGroup } from 'QuadGroup.js'
 import THREEx from '../vendor/threex.keyboardstate.js'
 
 export class Engine  {

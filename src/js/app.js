@@ -1,6 +1,6 @@
 import "babel-polyfill";
-import { Controls } from './modules/controls.js'
-import { Engine } from './modules/engine.js'
+import { Controls } from './modules/Controls.js'
+import { Engine } from './modules/Engine.js'
 import { PlanetGenerator } from './modules/PlanetGenerator.js'
 import THREE from './vendor/three.min.js';
 
