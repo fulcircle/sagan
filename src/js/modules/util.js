@@ -1,4 +1,5 @@
 import THREE from '../vendor/three.min.js'
+import { Mesh } from '../modules/Mesh.js'
 
 export function* randomNumber(min, max) {
     while (true) {
@@ -23,7 +24,9 @@ export function getCentroid(object) {
 
     if (object instanceof THREE.Object3D) {
         box.setFromObject(object);
-    }  else {
+    }  else if (object instanceof Mesh) {
+        box.setFromObject(object.mesh);
+    } else if (object instanceof THREE.Box3) {
         box = object;
     }
 
