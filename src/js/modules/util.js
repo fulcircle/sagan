@@ -1,3 +1,5 @@
+import THREE from '../vendor/three.min.js'
+
 export function* randomNumber(min, max) {
     while (true) {
         yield (Math.random() * (max - min) + min);
@@ -14,5 +16,20 @@ export function initArray(length) {
     }
 
     return arr;
+}
+
+export function getCentroid(object) {
+    let box = new THREE.Box3();
+
+    if (object instanceof THREE.Object3D) {
+        box.setFromObject(object);
+    }  else {
+        box = object;
+    }
+
+    let centroid = new THREE.Vector3();
+    centroid.addVectors(box.min, box.max);
+    centroid.multiplyScalar(0.5);
+    return centroid;
 }
 

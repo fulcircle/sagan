@@ -1,7 +1,7 @@
 import THREE from '../vendor/three.min.js'
-import { Camera } from 'Camera.js'
-import { Mesh } from 'Mesh.js'
-import { QuadGroup } from 'QuadGroup.js'
+import { Camera } from './Camera.js'
+import { Mesh } from './Mesh.js'
+import { QuadContainer } from './QuadContainer.js'
 import THREEx from '../vendor/threex.keyboardstate.js'
 
 export class Engine  {
@@ -15,12 +15,8 @@ export class Engine  {
 
         this.camera = new Camera(this.container);
 
-
         window.addEventListener( 'resize', () => {
-
             this.camera.aspect = this.container.offsetWidth / this.container.offsetHeight;
-
-
             this.renderer.setSize( this.container.offsetWidth, this.container.offsetHeight );
 
         }, false );
@@ -51,12 +47,19 @@ export class Engine  {
 
     addQuadTree(quadRoot) {
 
-        let quadGroup = new QuadGroup(quadRoot, this);
+        let quadContainer = new QuadContainer(quadRoot, this);
+        this.quadGroups.push(quadContainer);
+
+        // Add this quad group to the scene so it is a child of the scene
+        this.add(quadContainer.group);
+
         let queue = [quadRoot];
         while (queue.length > 0) {
             let q = queue.shift();
 
-            quadGroup.quads.push(q);
+
+            quadContainer.quads.push(q);
+
 
             q.visible = false;
             q._isLeaf = !q.children.length;
@@ -64,59 +67,18 @@ export class Engine  {
             queue.push(...q.children);
 
             // Add this as a child of to a group in the scene, so transformations to the group will apply to this quad as well
-            quadGroup.group.add(q.mesh);
+            quadContainer.group.add(q.mesh);
 
-            // Generate the vertices of mesh here, since we are now added to the engine
+            // Generate the vertices of mesh here, since we are now added to the group
             q.generate();
+
         }
 
-        this.add(quadGroup.group);
-
-        this.quadGroups.push(quadGroup);
-
-        return quadGroup;
+        return quadContainer;
     }
 
     get domElement() {
         return this.renderer.domElement;
-    }
-
-    drawQuads() {
-        for (let q of this.quadGroups) {
-            q.quads.forEach((q) => {
-                q.visible = false;
-            });
-            this.chunkedLOD(q.root)
-        }
-    }
-
-    // Chunked LOD implementation: http://tulrich.com/geekstuff/sig-notes.pdf
-    // TODO: Optimizations
-    // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
-    // Breadth-first search of quadtree?
-    chunkedLOD(quad) {
-
-        // TODO: Need to get distance to nearest face, not centroid
-        let distance = this.camera.getDistanceTo(quad.centroid);
-
-        // Screen space error
-        let rho = (quad.error / distance) * this.camera.perspectiveScalingFactor;
-
-        // distance = 0 so screenspace error should be 0
-        if (!isFinite(rho)) {
-            rho = 0;
-        }
-        // Largest allowable screen error
-        let tau = 45;
-
-        if (quad._isLeaf || rho <= tau) {
-            quad.visible = true;
-        } else {
-            // TODO: When we implement excluding of whole subbranches, we'll have to turn off visibility for all chunks in that branch
-            for (let c of quad.children) {
-                this.chunkedLOD(c);
-            }
-        }
     }
 
     handleKeyboard() {
@@ -153,7 +115,11 @@ export class Engine  {
         requestAnimationFrame(this.render.bind(this));
         // TODO: Drawing quads on each render call is inefficient.  Only draw quads on camera move.
         this.handleKeyboard();
-        this.drawQuads();
+
+        for (let group of this.quadGroups) {
+            group.drawQuads(this.camera);
+        }
+
         this.renderer.render(this.scene, this.camera._camera);
 
     }

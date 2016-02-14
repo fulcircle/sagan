@@ -6,9 +6,10 @@ export class PlanetGenerator {
 
     constructor(engine, radius) {
         let generator = new TerrainGenerator(engine, radius, radius, HeightMapFuncs.SinRandom.func);
-        let quadGroup = generator.generate();
+        this.quadGroup = generator.generate();
 
-        var faceAngle = new THREE.Euler( 0, THREE.Math.degToRad(90), 0, 'XYZ' );
+        //var faceAngle = new THREE.Euler( 0, THREE.Math.degToRad(90), 0, 'XYZ' );
+        //this.quadGroup.group.rotateX(90)
 
     }
 }

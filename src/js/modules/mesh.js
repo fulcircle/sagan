@@ -1,6 +1,6 @@
 import THREE from '../vendor/three.min.js'
 import { HeightMap } from './HeightMap.js'
-import { randomNumber } from './Util.js'
+import { randomNumber, getCentroid } from './Util.js'
 
 // Abstract
 export class Mesh {
@@ -30,7 +30,7 @@ export class TriangleMesh extends Mesh {
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.MeshBasicMaterial( { color: 0xffffff });
         this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.center = new THREE.Vector3();
+        this.centroid = new THREE.Vector3();
     }
 
     set wireframe(bool) {
@@ -63,15 +63,13 @@ export class TriangleMesh extends Mesh {
         this.mesh.geometry = updatedGeom;
         this.mesh.needsUpdate = true;
 
+        this.recomputeBoundingBox();
+
+    }
+
+    recomputeBoundingBox() {
         this.geometry.computeBoundingBox();
-
-        // TODO: Clean up these calculations, and figure out why localToWorld doesn't work
-        let centroid = new THREE.Vector3();
-        centroid.addVectors(this.geometry.boundingBox.min, this.geometry.boundingBox.max);
-        centroid.multiplyScalar(0.5);
-        centroid.addVectors(centroid, this.mesh.position);
-        this.centroid = centroid;
-
+        this.centroid = getCentroid(this.geometry.boundingBox);
     }
 }
 
@@ -120,7 +118,6 @@ export class TerrainMesh extends TriangleMesh {
                 let j0 = j;
                 let j1 = j + this.stride;
 
-                // TODO: Figure out a way to apply local to world matrix transform here it may be faster
                 let ih0 = i0 + this.mesh.position.x;
                 let ih1 = i1 + this.mesh.position.x;
 
