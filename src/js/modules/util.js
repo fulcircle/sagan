@@ -34,10 +34,10 @@ export function getBoundingBox(object) {
 
     if (object instanceof THREE.Object3D) {
         box.setFromObject(object);
-    }  else if (object instanceof Mesh) {
-        box.setFromObject(object.mesh);
     } else if (object instanceof THREE.Box3) {
         box = object;
+    } else {
+        throw Error('Unrecognized type passed into getBoundingBox()');
     }
 
     return box;

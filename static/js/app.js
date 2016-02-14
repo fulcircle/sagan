@@ -4884,8 +4884,6 @@ var HeightMap = exports.HeightMap = function () {
 },{"./Util.js":199}],196:[function(require,module,exports){
 'use strict';
 
-var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 Object.defineProperty(exports, "__esModule", {
@@ -5110,25 +5108,25 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
     // Spherify
 
     _createClass(QuadMesh, [{
-        key: 'update',
-        value: function update(vertexPositions) {
-            //for (var i = 0; i < vertexPositions.length; i++) {
-            //    let x = vertexPositions[i][0];
-            //    let y = vertexPositions[i][1];
-            //    let z = vertexPositions[i][2];
-            //
-            //    let v = new THREE.Vector3(x, y, z);
-            //    this.mesh.localToWorld(v);
-            //
-            //    v.normalize();
-            //
-            //    vertexPositions[i][0] = v.x * this.width;
-            //    vertexPositions[i][1] = v.y * this.width;
-            //    vertexPositions[i][2] = v.z * this.width;
-            //
-            //}
+        key: 'spherify',
+        value: function spherify() {
+            var vertices = this.mesh.geometry.attributes.position.array;
+            for (var i = 0; i < vertices.length; i++) {
+                var x = vertices[i * 3 + 0];
+                var y = vertices[i * 3 + 1];
+                var z = vertices[i * 3 + 2];
 
-            _get(Object.getPrototypeOf(QuadMesh.prototype), 'update', this).call(this, vertexPositions);
+                var v = new _threeMin2.default.Vector3(x, y, z);
+                v.applyMatrix4(this.mesh.matrixWorld);
+                v.normalize();
+
+                vertices[i * 3 + 0] = v.x * this.width;
+                vertices[i * 3 + 1] = v.y * this.width;
+                vertices[i * 3 + 2] = v.z * this.width;
+            }
+
+            this.mesh.geometry.needsUpdate = true;
+            this.recomputeBoundingBox();
         }
     }]);
 
@@ -5164,13 +5162,39 @@ var Planet = exports.Planet = function () {
         _classCallCheck(this, Planet);
 
         this.cube = new _threeMin2.default.Group();
-        this.position = new _threeMin2.default.Vector3();
-
         engine.add(this.cube);
 
         var sides = [{
             axis: 'x',
             degrees: '90'
+        }, {
+            axis: 'y',
+            degrees: '-90'
+        }, {
+            axis: 'z',
+            degrees: '0'
+        }, {
+            axis: 'x',
+            degrees: '90',
+            translation: {
+                x: 0,
+                y: radius,
+                z: 0
+            }
+        }, {
+            translation: {
+                x: 0,
+                y: 0,
+                z: radius
+            }
+        }, {
+            axis: 'y',
+            degrees: '-90',
+            translation: {
+                x: radius,
+                y: 0,
+                z: 0
+            }
         }];
 
         var _loop = function _loop() {
@@ -5187,70 +5211,14 @@ var Planet = exports.Planet = function () {
             // Add this terrain as one of our cube faces
             _this.cube.add(terrain.mesh);
 
-            // Generate terrain geometry
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
-
-            try {
-                for (var _iterator = terrain.quads[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    var quad = _step.value;
-
-                    quad.generate();
-                }
-            } catch (err) {
-                _didIteratorError = true;
-                _iteratorError = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion && _iterator.return) {
-                        _iterator.return();
-                    }
-                } finally {
-                    if (_didIteratorError) {
-                        throw _iteratorError;
-                    }
-                }
-            }
+            //for (let q of terrain.quads) {
+            //    q.spherify();
+            //}
 
             engine.renderFuncs.push(function () {
                 terrain.draw(engine.camera.position, engine.camera.perspectiveScalingFactor);
             });
         };
-
-        //{
-        //    axis: 'y',
-        //    degrees: '-90'
-        //},
-        //{
-        //    axis: 'z',
-        //    degrees: '0'
-        //},
-        //{
-        //    axis: 'x',
-        //    degrees: '90',
-        //    translation: {
-        //        x: 0,
-        //        y: radius,
-        //        z: 0
-        //    }
-        //},
-        //{
-        //   translation: {
-        //       x: 0,
-        //       y: 0,
-        //       z: radius
-        //   }
-        //},
-        //{
-        //    axis: 'y',
-        //    degrees: '-90',
-        //    translation: {
-        //        x: radius,
-        //        y: 0,
-        //        z: 0
-        //    }
-        //}
 
         for (var i = 0; i < sides.length; i++) {
             _loop();
@@ -5261,11 +5229,6 @@ var Planet = exports.Planet = function () {
         key: 'centroid',
         get: function get() {
             return (0, _Util.getCentroid)(this.cube);
-        }
-    }, {
-        key: 'position',
-        set: function set(pos) {
-            this.cube.position.set(pos.x, pos.y, pos.z);
         }
     }]);
 
@@ -5314,6 +5277,7 @@ var Terrain = exports.Terrain = function () {
         this.heightMap = new _HeightMap.HeightMap(terrainHeight + 1, terrainWidth + 1, heightMapFunc);
 
         this.mesh = new _threeMin2.default.Group();
+
         this.quads = [];
 
         this.rootQuad = new _Mesh.QuadMesh({
@@ -5336,6 +5300,7 @@ var Terrain = exports.Terrain = function () {
 
             parentQuad.wireframe = true;
             parentQuad.visible = false;
+            parentQuad.generate();
 
             // Add this to our list of quads
             this.quads.push(parentQuad);
@@ -5411,7 +5376,6 @@ var Terrain = exports.Terrain = function () {
         // Chunked LOD implementation: http://tulrich.com/geekstuff/sig-notes.pdf
         // TODO: Optimizations
         // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
-        // Breadth-first search of quadtree?
 
     }, {
         key: 'chunkedLOD',
@@ -5550,10 +5514,10 @@ function getBoundingBox(object) {
 
     if (object instanceof _threeMin2.default.Object3D) {
         box.setFromObject(object);
-    } else if (object instanceof _Mesh.Mesh) {
-        box.setFromObject(object.mesh);
     } else if (object instanceof _threeMin2.default.Box3) {
         box = object;
+    } else {
+        throw Error('Unrecognized type passed into getBoundingBox()');
     }
 
     return box;

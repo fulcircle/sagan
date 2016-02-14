@@ -149,24 +149,25 @@ export class QuadMesh extends TerrainMesh {
     }
 
     // Spherify
-    update(vertexPositions) {
-        //for (var i = 0; i < vertexPositions.length; i++) {
-        //    let x = vertexPositions[i][0];
-        //    let y = vertexPositions[i][1];
-        //    let z = vertexPositions[i][2];
-        //
-        //    let v = new THREE.Vector3(x, y, z);
-        //    this.mesh.localToWorld(v);
-        //
-        //    v.normalize();
-        //
-        //    vertexPositions[i][0] = v.x * this.width;
-        //    vertexPositions[i][1] = v.y * this.width;
-        //    vertexPositions[i][2] = v.z * this.width;
-        //
-        //}
+    spherify() {
+        let vertices = this.mesh.geometry.attributes.position.array;
+        for (var i = 0; i < vertices.length; i++) {
+            let x = vertices[i * 3 + 0];
+            let y = vertices[i * 3 + 1];
+            let z = vertices[i * 3 + 2];
 
-        super.update(vertexPositions);
+            let v = new THREE.Vector3(x, y, z);
+            v.applyMatrix4(this.mesh.matrixWorld);
+            v.normalize();
+
+            vertices[i * 3 + 0] = v.x * this.width;
+            vertices[i * 3 + 1] = v.y * this.width;
+            vertices[i * 3 + 2] = v.z * this.width;
+
+        }
+
+        this.mesh.geometry.needsUpdate = true;
+        this.recomputeBoundingBox();
     }
 
 }

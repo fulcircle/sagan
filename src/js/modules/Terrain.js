@@ -21,6 +21,7 @@ export class Terrain {
         this.heightMap = new HeightMap(terrainHeight + 1, terrainWidth + 1, heightMapFunc);
 
         this.mesh = new THREE.Group();
+
         this.quads = [];
 
         this.rootQuad = new QuadMesh({
@@ -41,6 +42,7 @@ export class Terrain {
 
         parentQuad.wireframe = true;
         parentQuad.visible = false;
+        parentQuad.generate();
 
         // Add this to our list of quads
         this.quads.push(parentQuad);
@@ -98,7 +100,6 @@ export class Terrain {
     // Chunked LOD implementation: http://tulrich.com/geekstuff/sig-notes.pdf
     // TODO: Optimizations
     // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
-    // Breadth-first search of quadtree?
     chunkedLOD(quad, pos, scalingFactor=1) {
 
         // TODO: Need to get distance to nearest face, not centroid

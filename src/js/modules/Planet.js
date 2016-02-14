@@ -6,8 +6,6 @@ export class Planet {
 
     constructor(engine, radius) {
         this.cube = new THREE.Group();
-        this.position = new THREE.Vector3();
-
         engine.add(this.cube);
 
         let sides = [
@@ -15,39 +13,39 @@ export class Planet {
                 axis: 'x',
                 degrees: '90'
             },
-            //{
-            //    axis: 'y',
-            //    degrees: '-90'
-            //},
-            //{
-            //    axis: 'z',
-            //    degrees: '0'
-            //},
-            //{
-            //    axis: 'x',
-            //    degrees: '90',
-            //    translation: {
-            //        x: 0,
-            //        y: radius,
-            //        z: 0
-            //    }
-            //},
-            //{
-            //   translation: {
-            //       x: 0,
-            //       y: 0,
-            //       z: radius
-            //   }
-            //},
-            //{
-            //    axis: 'y',
-            //    degrees: '-90',
-            //    translation: {
-            //        x: radius,
-            //        y: 0,
-            //        z: 0
-            //    }
-            //}
+            {
+                axis: 'y',
+                degrees: '-90'
+            },
+            {
+                axis: 'z',
+                degrees: '0'
+            },
+            {
+                axis: 'x',
+                degrees: '90',
+                translation: {
+                    x: 0,
+                    y: radius,
+                    z: 0
+                }
+            },
+            {
+               translation: {
+                   x: 0,
+                   y: 0,
+                   z: radius
+               }
+            },
+            {
+                axis: 'y',
+                degrees: '-90',
+                translation: {
+                    x: radius,
+                    y: 0,
+                    z: 0
+                }
+            }
 
         ];
 
@@ -65,10 +63,9 @@ export class Planet {
             // Add this terrain as one of our cube faces
             this.cube.add(terrain.mesh);
 
-            // Generate terrain geometry
-            for (let quad of terrain.quads) {
-                quad.generate();
-            }
+            //for (let q of terrain.quads) {
+            //    q.spherify();
+            //}
 
             engine.renderFuncs.push(() => {
                 terrain.draw(engine.camera.position, engine.camera.perspectiveScalingFactor);
@@ -82,7 +79,4 @@ export class Planet {
         return getCentroid(this.cube);
     }
 
-    set position(pos) {
-        this.cube.position.set(pos.x, pos.y, pos.z);
-    }
 }
