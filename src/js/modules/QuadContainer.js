@@ -29,8 +29,10 @@ export class QuadContainer {
     chunkedLOD(quad, camera) {
 
         // TODO: Need to get distance to nearest face, not centroid
+        // We're translating from local mesh coordinates (in this QuadContainer's THREE.Group), to the global coordinates
         let worldPosition = new THREE.Vector3();
         worldPosition.setFromMatrixPosition(quad.mesh.matrixWorld);
+        // Check the camera distance from world coordinates of this quad to the camera
         let distance = camera.getDistanceTo(worldPosition);
 
         // Screen space error
