@@ -1,7 +1,6 @@
 import THREE from '../vendor/three.min.js'
 import { Camera } from './Camera.js'
 import { Mesh } from './Mesh.js'
-import { QuadContainer } from './QuadContainer.js'
 import THREEx from '../vendor/threex.keyboardstate.js'
 
 export class Engine  {
@@ -21,10 +20,9 @@ export class Engine  {
 
         }, false );
 
-        // Our quadtrees for terrain LOD
-        this.quadGroups = [];
-
         this.keyboard = new THREEx.KeyboardState();
+
+        this.renderFuncs  = [];
 
     }
 
@@ -43,38 +41,6 @@ export class Engine  {
             this.scene.remove(object);
         }
 
-    }
-
-    addQuadTree(quadRoot) {
-
-        let quadContainer = new QuadContainer(quadRoot, this);
-        this.quadGroups.push(quadContainer);
-
-        // Add this quad group to the scene so it is a child of the scene
-        this.add(quadContainer.group);
-
-        let queue = [quadRoot];
-        while (queue.length > 0) {
-            let q = queue.shift();
-
-
-            quadContainer.quads.push(q);
-
-
-            q.visible = false;
-            q._isLeaf = !q.children.length;
-
-            queue.push(...q.children);
-
-            // Add this as a child of to a group in the scene, so transformations to the group will apply to this quad as well
-            quadContainer.group.add(q.mesh);
-
-            // Generate the vertices of mesh here, since we are now added to the group
-            q.generate();
-
-        }
-
-        return quadContainer;
     }
 
     get domElement() {
@@ -113,13 +79,10 @@ export class Engine  {
 
     render() {
         requestAnimationFrame(this.render.bind(this));
-        // TODO: Drawing quads on each render call is inefficient.  Only draw quads on camera move.
         this.handleKeyboard();
-
-        for (let group of this.quadGroups) {
-            group.drawQuads(this.camera);
+        for (let func of this.renderFuncs) {
+            func();
         }
-
         this.renderer.render(this.scene, this.camera._camera);
 
     }

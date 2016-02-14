@@ -20,6 +20,16 @@ export function initArray(length) {
 }
 
 export function getCentroid(object) {
+    let box = getBoundingBox(object);
+
+    let centroid = new THREE.Vector3();
+    centroid.addVectors(box.min, box.max);
+    centroid.multiplyScalar(0.5);
+    return centroid;
+}
+
+export function getBoundingBox(object) {
+
     let box = new THREE.Box3();
 
     if (object instanceof THREE.Object3D) {
@@ -30,9 +40,7 @@ export function getCentroid(object) {
         box = object;
     }
 
-    let centroid = new THREE.Vector3();
-    centroid.addVectors(box.min, box.max);
-    centroid.multiplyScalar(0.5);
-    return centroid;
+    return box;
+
 }
 

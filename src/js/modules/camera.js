@@ -30,14 +30,6 @@ export class Camera {
         this.orbit.update();
     }
 
-    getDistanceTo(object) {
-        if (object instanceof THREE.Vector3) {
-            return this.position.distanceTo(object);
-        } else {
-            return this.position.distanceTo(object.position);
-        }
-    }
-
     get aspect() {
         return this._camera.aspect;
     }

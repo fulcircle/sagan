@@ -4510,11 +4510,11 @@ process.umask = function() { return 0; };
 
 require('babel-polyfill');
 
-var _controls = require('./modules/controls.js');
+var _Controls = require('./modules/Controls.js');
 
-var _engine = require('./modules/engine.js');
+var _Engine = require('./modules/Engine.js');
 
-var _PlanetGenerator = require('./modules/PlanetGenerator.js');
+var _Planet = require('./modules/Planet.js');
 
 var _threeMin = require('./vendor/three.min.js');
 
@@ -4522,162 +4522,27 @@ var _threeMin2 = _interopRequireDefault(_threeMin);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var engine = new _engine.Engine(document.body);
+var engine = new _Engine.Engine(document.body);
 document.body.appendChild(engine.domElement);
 
 //let controls = new Controls();
 //controls.addControl(quad, 'LOD').min(1).max(4).step(1);
 
-var TERRAIN_HEIGHT = 128;
-var TERRAIN_WIDTH = 128;
+var radius = 128;
+var planet = new _Planet.Planet(engine, radius);
 
-//let generator = new TerrainGenerator(engine, TERRAIN_HEIGHT, TERRAIN_WIDTH, HeightMapFuncs.SinRandom.func);
-//generator.generate();
+var axisHelper = new _threeMin2.default.AxisHelper(radius * 2);
+engine.add(axisHelper);
 
-window.generator = new _PlanetGenerator.PlanetGenerator(engine, TERRAIN_WIDTH);
-
-engine.camera.position = new _threeMin2.default.Vector3(TERRAIN_WIDTH / 2, TERRAIN_HEIGHT / 2, 20);
-engine.camera.focus(new _threeMin2.default.Vector3(TERRAIN_WIDTH / 2, TERRAIN_HEIGHT / 2, 0));
+engine.camera.position = new _threeMin2.default.Vector3(planet.centroid.x, planet.centroid.y, 20);
+engine.camera.focus(planet.centroid);
 
 engine.render();
 
 window.engine = engine;
+window.planet = planet;
 
-},{"./modules/PlanetGenerator.js":192,"./modules/controls.js":195,"./modules/engine.js":196,"./vendor/three.min.js":202,"babel-polyfill":1}],192:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.PlanetGenerator = undefined;
-
-var _threeMin = require('../vendor/three.min.js');
-
-var _threeMin2 = _interopRequireDefault(_threeMin);
-
-var _TerrainGenerator = require('./TerrainGenerator.js');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var PlanetGenerator = exports.PlanetGenerator = function PlanetGenerator(engine, radius) {
-    _classCallCheck(this, PlanetGenerator);
-
-    var generator = new _TerrainGenerator.TerrainGenerator(engine, radius, radius, _TerrainGenerator.HeightMapFuncs.SinRandom.func);
-    var quadGroup = generator.generate();
-
-    var faceAngle = new _threeMin2.default.Euler(0, _threeMin2.default.Math.degToRad(90), 0, 'XYZ');
-};
-
-},{"../vendor/three.min.js":202,"./TerrainGenerator.js":193}],193:[function(require,module,exports){
-'use strict';
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.TerrainGenerator = exports.HeightMapFuncs = undefined;
-
-var _threeMin = require('../vendor/three.min.js');
-
-var _threeMin2 = _interopRequireDefault(_threeMin);
-
-var _util = require('./util.js');
-
-var _heightmap = require('./heightmap.js');
-
-var _mesh = require('./mesh.js');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var HeightMapFuncs = exports.HeightMapFuncs = {
-    SinRandom: {
-        random: (0, _util.randomNumber)(0, 2),
-        func: function func(x, y) {
-            // TODO: Can't use 'this' keyword here.. wtf?
-            return 3 * Math.sin(0.1 * x) + 3 * Math.sin(0.1 * y) + HeightMapFuncs.SinRandom.random.next().value;
-        }
-    }
-};
-
-var TerrainGenerator = exports.TerrainGenerator = function () {
-    function TerrainGenerator(engine, terrainHeight, terrainWidth, heightMapFunc) {
-        _classCallCheck(this, TerrainGenerator);
-
-        this.engine = engine;
-        this.terrainHeight = terrainHeight;
-        this.terrainWidth = terrainWidth;
-
-        // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
-        this.heightMap = new _heightmap.HeightMap(terrainHeight + 1, terrainWidth + 1, heightMapFunc);
-
-        this.rootQuad = new _mesh.QuadMesh({
-            height: terrainHeight,
-            width: terrainWidth,
-            position: new _threeMin2.default.Vector3(),
-            heightMap: this.heightMap,
-            LOD: 1,
-            error: terrainWidth
-        });
-
-        this.rootQuad.wireframe = true;
-    }
-
-    _createClass(TerrainGenerator, [{
-        key: 'generate',
-        value: function generate() {
-            this.generateQuadTree(this.rootQuad);
-            // Returns a QuadGroup which encapsulates a THREE.Group which we can manipulate in the scene
-            return this.engine.addQuadTree(this.rootQuad);
-        }
-
-        // TODO: Convert into breadth-first generation of tree
-
-    }, {
-        key: 'generateQuadTree',
-        value: function generateQuadTree(parentQuad) {
-            if (parentQuad.LOD > 6) {
-                return;
-            }
-            var currX = parentQuad.position.x;
-            var currY = parentQuad.position.y;
-            var currZ = parentQuad.position.z;
-
-            var xstride = parentQuad.width * 0.5;
-            var ystride = parentQuad.height * 0.5;
-
-            for (var i = 0; i < 4; i++) {
-                var quad = new _mesh.QuadMesh({
-                    width: parentQuad.width * 0.5,
-                    height: parentQuad.height * 0.5,
-                    position: new _threeMin2.default.Vector3(currX, currY, currZ),
-                    LOD: parentQuad.LOD + 1,
-                    heightMap: parentQuad.heightMap,
-                    error: parentQuad.error * 0.5
-                });
-
-                quad.wireframe = true;
-
-                parentQuad.children.push(quad);
-
-                currX = currX + xstride;
-                if (currX - parentQuad.position.x >= parentQuad.width) {
-                    currX = parentQuad.position.x;
-                    currY = currY + ystride;
-                }
-                this.generateQuadTree(quad);
-            }
-        }
-    }]);
-
-    return TerrainGenerator;
-}();
-
-},{"../vendor/three.min.js":202,"./heightmap.js":197,"./mesh.js":198,"./util.js":200}],194:[function(require,module,exports){
+},{"./modules/Controls.js":193,"./modules/Engine.js":194,"./modules/Planet.js":197,"./vendor/three.min.js":201,"babel-polyfill":1}],192:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -4720,15 +4585,6 @@ var Camera = exports.Camera = function () {
             this.orbit.update();
         }
     }, {
-        key: 'getDistanceTo',
-        value: function getDistanceTo(object) {
-            if (object instanceof _threeMin2.default.Vector3) {
-                return this.position.distanceTo(object);
-            } else {
-                return this.position.distanceTo(object.position);
-            }
-        }
-    }, {
         key: 'updateFOV',
         value: function updateFOV() {
             this.vFOV = _threeMin2.default.Math.degToRad(this._camera.fov);
@@ -4769,7 +4625,7 @@ var Camera = exports.Camera = function () {
     return Camera;
 }();
 
-},{"../vendor/three.min.js":202,"../vendor/three.orbitcontrols.js":203}],195:[function(require,module,exports){
+},{"../vendor/three.min.js":201,"../vendor/three.orbitcontrols.js":202}],193:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -4800,7 +4656,7 @@ var Controls = exports.Controls = function () {
     return Controls;
 }();
 
-},{"../vendor/dat.gui.min.js":201}],196:[function(require,module,exports){
+},{"../vendor/dat.gui.min.js":200}],194:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -4814,19 +4670,15 @@ var _threeMin = require('../vendor/three.min.js');
 
 var _threeMin2 = _interopRequireDefault(_threeMin);
 
-var _camera = require('../modules/camera.js');
+var _Camera = require('./Camera.js');
 
-var _mesh = require('../modules/mesh.js');
-
-var _quadgroup = require('../modules/quadgroup.js');
+var _Mesh = require('./Mesh.js');
 
 var _threexKeyboardstate = require('../vendor/threex.keyboardstate.js');
 
 var _threexKeyboardstate2 = _interopRequireDefault(_threexKeyboardstate);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -4842,25 +4694,22 @@ var Engine = exports.Engine = function () {
         this.renderer = new _threeMin2.default.WebGLRenderer();
         this.renderer.setSize(this.container.offsetWidth, this.container.offsetHeight);
 
-        this.camera = new _camera.Camera(this.container);
+        this.camera = new _Camera.Camera(this.container);
 
         window.addEventListener('resize', function () {
-
             _this.camera.aspect = _this.container.offsetWidth / _this.container.offsetHeight;
-
             _this.renderer.setSize(_this.container.offsetWidth, _this.container.offsetHeight);
         }, false);
 
-        // Our quadtrees for terrain LOD
-        this.quadGroups = [];
-
         this.keyboard = new _threexKeyboardstate2.default.KeyboardState();
+
+        this.renderFuncs = [];
     }
 
     _createClass(Engine, [{
         key: 'add',
         value: function add(object) {
-            if (object instanceof _mesh.Mesh) {
+            if (object instanceof _Mesh.Mesh) {
                 this.scene.add(object.mesh);
             } else {
                 this.scene.add(object);
@@ -4869,123 +4718,10 @@ var Engine = exports.Engine = function () {
     }, {
         key: 'remove',
         value: function remove(object) {
-            if (object instanceof _mesh.Mesh) {
+            if (object instanceof _Mesh.Mesh) {
                 this.scene.remove(object.mesh);
             } else {
                 this.scene.remove(object);
-            }
-        }
-    }, {
-        key: 'addQuadTree',
-        value: function addQuadTree(quadRoot) {
-
-            var quadGroup = new _quadgroup.QuadGroup(quadRoot, this);
-            var queue = [quadRoot];
-            while (queue.length > 0) {
-                var q = queue.shift();
-
-                quadGroup.quads.push(q);
-
-                q.visible = false;
-                q._isLeaf = !q.children.length;
-
-                queue.push.apply(queue, _toConsumableArray(q.children));
-
-                // Add this as a child of to a group in the scene, so transformations to the group will apply to this quad as well
-                quadGroup.group.add(q.mesh);
-
-                // Generate the vertices of mesh here, since we are now added to the engine
-                q.generate();
-            }
-
-            this.add(quadGroup.group);
-
-            this.quadGroups.push(quadGroup);
-
-            return quadGroup;
-        }
-    }, {
-        key: 'drawQuads',
-        value: function drawQuads() {
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
-
-            try {
-                for (var _iterator = this.quadGroups[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    var q = _step.value;
-
-                    q.quads.forEach(function (q) {
-                        q.visible = false;
-                    });
-                    this.chunkedLOD(q.root);
-                }
-            } catch (err) {
-                _didIteratorError = true;
-                _iteratorError = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion && _iterator.return) {
-                        _iterator.return();
-                    }
-                } finally {
-                    if (_didIteratorError) {
-                        throw _iteratorError;
-                    }
-                }
-            }
-        }
-
-        // Chunked LOD implementation: http://tulrich.com/geekstuff/sig-notes.pdf
-        // TODO: Optimizations
-        // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
-        // Breadth-first search of quadtree?
-
-    }, {
-        key: 'chunkedLOD',
-        value: function chunkedLOD(quad) {
-
-            // TODO: Need to get distance to nearest face, not centroid
-            var distance = this.camera.getDistanceTo(quad.centroid);
-
-            // Screen space error
-            var rho = quad.error / distance * this.camera.perspectiveScalingFactor;
-
-            // distance = 0 so screenspace error should be 0
-            if (!isFinite(rho)) {
-                rho = 0;
-            }
-            // Largest allowable screen error
-            var tau = 45;
-
-            if (quad._isLeaf || rho <= tau) {
-                quad.visible = true;
-            } else {
-                // TODO: When we implement excluding of whole subbranches, we'll have to turn off visibility for all chunks in that branch
-                var _iteratorNormalCompletion2 = true;
-                var _didIteratorError2 = false;
-                var _iteratorError2 = undefined;
-
-                try {
-                    for (var _iterator2 = quad.children[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                        var c = _step2.value;
-
-                        this.chunkedLOD(c);
-                    }
-                } catch (err) {
-                    _didIteratorError2 = true;
-                    _iteratorError2 = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                            _iterator2.return();
-                        }
-                    } finally {
-                        if (_didIteratorError2) {
-                            throw _iteratorError2;
-                        }
-                    }
-                }
             }
         }
     }, {
@@ -5023,9 +4759,32 @@ var Engine = exports.Engine = function () {
         key: 'render',
         value: function render() {
             requestAnimationFrame(this.render.bind(this));
-            // TODO: Drawing quads on each render call is inefficient.  Only draw quads on camera move.
             this.handleKeyboard();
-            this.drawQuads();
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = this.renderFuncs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var func = _step.value;
+
+                    func();
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
             this.renderer.render(this.scene, this.camera._camera);
         }
     }, {
@@ -5038,7 +4797,7 @@ var Engine = exports.Engine = function () {
     return Engine;
 }();
 
-},{"../modules/camera.js":194,"../modules/mesh.js":198,"../modules/quadgroup.js":199,"../vendor/three.min.js":202,"../vendor/threex.keyboardstate.js":204}],197:[function(require,module,exports){
+},{"../vendor/three.min.js":201,"../vendor/threex.keyboardstate.js":203,"./Camera.js":192,"./Mesh.js":196}],195:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -5048,7 +4807,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.HeightMap = undefined;
 
-var _util = require("./util.js");
+var _Util = require("./Util.js");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -5064,7 +4823,7 @@ var HeightMap = exports.HeightMap = function () {
     _createClass(HeightMap, [{
         key: "_initMap",
         value: function _initMap(func) {
-            this.heightMap = (0, _util.initArray)(this.width, this.height);
+            this.heightMap = (0, _Util.initArray)(this.width, this.height);
 
             for (var a = 0; a < this.heightMap.length; a++) {
                 for (var b = 0; b < this.heightMap[a].length; b++) {
@@ -5122,8 +4881,10 @@ var HeightMap = exports.HeightMap = function () {
     return HeightMap;
 }();
 
-},{"./util.js":200}],198:[function(require,module,exports){
+},{"./Util.js":199}],196:[function(require,module,exports){
 'use strict';
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -5136,9 +4897,9 @@ var _threeMin = require('../vendor/three.min.js');
 
 var _threeMin2 = _interopRequireDefault(_threeMin);
 
-var _heightmap = require('./heightmap.js');
+var _HeightMap = require('./HeightMap.js');
 
-var _util = require('./util.js');
+var _Util = require('./Util.js');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -5187,7 +4948,7 @@ var TriangleMesh = exports.TriangleMesh = function (_Mesh) {
         _this.geometry = new _threeMin2.default.BufferGeometry();
         _this.material = new _threeMin2.default.MeshBasicMaterial({ color: 0xffffff });
         _this.mesh = new _threeMin2.default.Mesh(_this.geometry, _this.material);
-        _this.center = new _threeMin2.default.Vector3();
+        _this.centroid = new _threeMin2.default.Vector3();
         return _this;
     }
 
@@ -5214,14 +4975,13 @@ var TriangleMesh = exports.TriangleMesh = function (_Mesh) {
             this.mesh.geometry = updatedGeom;
             this.mesh.needsUpdate = true;
 
+            this.recomputeBoundingBox();
+        }
+    }, {
+        key: 'recomputeBoundingBox',
+        value: function recomputeBoundingBox() {
             this.geometry.computeBoundingBox();
-
-            // TODO: Clean up these calculations, and figure out why localToWorld doesn't work
-            var centroid = new _threeMin2.default.Vector3();
-            centroid.addVectors(this.geometry.boundingBox.min, this.geometry.boundingBox.max);
-            centroid.multiplyScalar(0.5);
-            centroid.addVectors(centroid, this.mesh.position);
-            this.centroid = centroid;
+            this.centroid = (0, _Util.getCentroid)(this.geometry.boundingBox);
         }
     }, {
         key: 'wireframe',
@@ -5269,6 +5029,7 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
     _createClass(TerrainMesh, [{
         key: 'getHeight',
         value: function getHeight(x, y) {
+            return 0;
             if (!this.heightMap) {
                 return 0;
             } else {
@@ -5291,7 +5052,6 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
                     var j0 = j;
                     var j1 = j + this.stride;
 
-                    // TODO: Figure out a way to apply local to world matrix transform here it may be faster
                     var ih0 = i0 + this.mesh.position.x;
                     var ih1 = i1 + this.mesh.position.x;
 
@@ -5347,42 +5107,392 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
         return _this3;
     }
 
+    // Spherify
+
+    _createClass(QuadMesh, [{
+        key: 'update',
+        value: function update(vertexPositions) {
+            //for (var i = 0; i < vertexPositions.length; i++) {
+            //    let x = vertexPositions[i][0];
+            //    let y = vertexPositions[i][1];
+            //    let z = vertexPositions[i][2];
+            //
+            //    let v = new THREE.Vector3(x, y, z);
+            //    this.mesh.localToWorld(v);
+            //
+            //    v.normalize();
+            //
+            //    vertexPositions[i][0] = v.x * this.width;
+            //    vertexPositions[i][1] = v.y * this.width;
+            //    vertexPositions[i][2] = v.z * this.width;
+            //
+            //}
+
+            _get(Object.getPrototypeOf(QuadMesh.prototype), 'update', this).call(this, vertexPositions);
+        }
+    }]);
+
     return QuadMesh;
 }(TerrainMesh);
 
-},{"../vendor/three.min.js":202,"./heightmap.js":197,"./util.js":200}],199:[function(require,module,exports){
+},{"../vendor/three.min.js":201,"./HeightMap.js":195,"./Util.js":199}],197:[function(require,module,exports){
 'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.QuadGroup = undefined;
+exports.Planet = undefined;
 
 var _threeMin = require('../vendor/three.min.js');
 
 var _threeMin2 = _interopRequireDefault(_threeMin);
 
+var _Util = require('./Util.js');
+
+var _Terrain = require('./Terrain.js');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } } // Represents a THREE.Group of Quad Meshes
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var QuadGroup = exports.QuadGroup = function QuadGroup(quadRoot, engine) {
-    _classCallCheck(this, QuadGroup);
+var Planet = exports.Planet = function () {
+    function Planet(engine, radius) {
+        var _this = this;
 
-    this.group = new _threeMin2.default.Group();
-    this.root = quadRoot;
-    this.quads = [];
-    this.engine = engine;
+        _classCallCheck(this, Planet);
+
+        this.cube = new _threeMin2.default.Group();
+        this.position = new _threeMin2.default.Vector3();
+
+        engine.add(this.cube);
+
+        var sides = [{
+            axis: 'x',
+            degrees: '90'
+        }];
+
+        var _loop = function _loop() {
+            var terrain = new _Terrain.Terrain(radius, radius, _Terrain.HeightMapFuncs.SinRandom.func);
+            if (sides[i].translation) {
+                terrain.mesh.translateZ(sides[i].translation.z);
+                terrain.mesh.translateY(sides[i].translation.y);
+                terrain.mesh.translateX(sides[i].translation.x);
+            }
+            if (sides[i].axis) {
+                terrain.mesh.rotation[sides[i].axis] = _threeMin2.default.Math.degToRad(sides[i].degrees);
+            }
+
+            // Add this terrain as one of our cube faces
+            _this.cube.add(terrain.mesh);
+
+            // Generate terrain geometry
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = terrain.quads[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var quad = _step.value;
+
+                    quad.generate();
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            engine.renderFuncs.push(function () {
+                terrain.draw(engine.camera.position, engine.camera.perspectiveScalingFactor);
+            });
+        };
+
+        //{
+        //    axis: 'y',
+        //    degrees: '-90'
+        //},
+        //{
+        //    axis: 'z',
+        //    degrees: '0'
+        //},
+        //{
+        //    axis: 'x',
+        //    degrees: '90',
+        //    translation: {
+        //        x: 0,
+        //        y: radius,
+        //        z: 0
+        //    }
+        //},
+        //{
+        //   translation: {
+        //       x: 0,
+        //       y: 0,
+        //       z: radius
+        //   }
+        //},
+        //{
+        //    axis: 'y',
+        //    degrees: '-90',
+        //    translation: {
+        //        x: radius,
+        //        y: 0,
+        //        z: 0
+        //    }
+        //}
+
+        for (var i = 0; i < sides.length; i++) {
+            _loop();
+        }
+    }
+
+    _createClass(Planet, [{
+        key: 'centroid',
+        get: function get() {
+            return (0, _Util.getCentroid)(this.cube);
+        }
+    }, {
+        key: 'position',
+        set: function set(pos) {
+            this.cube.position.set(pos.x, pos.y, pos.z);
+        }
+    }]);
+
+    return Planet;
+}();
+
+},{"../vendor/three.min.js":201,"./Terrain.js":198,"./Util.js":199}],198:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.Terrain = exports.HeightMapFuncs = undefined;
+
+var _threeMin = require('../vendor/three.min.js');
+
+var _threeMin2 = _interopRequireDefault(_threeMin);
+
+var _Util = require('./Util.js');
+
+var _HeightMap = require('./HeightMap.js');
+
+var _Mesh = require('./Mesh.js');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var HeightMapFuncs = exports.HeightMapFuncs = {
+    SinRandom: {
+        random: (0, _Util.randomNumber)(0, 2),
+        func: function func(x, y) {
+            // TODO: Can't use 'this' keyword here.. wtf?
+            return 3 * Math.sin(0.1 * x) + 3 * Math.sin(0.1 * y) + HeightMapFuncs.SinRandom.random.next().value;
+        }
+    }
 };
 
-},{"../vendor/three.min.js":202}],200:[function(require,module,exports){
-"use strict";
+var Terrain = exports.Terrain = function () {
+    function Terrain(terrainHeight, terrainWidth, heightMapFunc) {
+        _classCallCheck(this, Terrain);
+
+        // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
+        this.heightMap = new _HeightMap.HeightMap(terrainHeight + 1, terrainWidth + 1, heightMapFunc);
+
+        this.mesh = new _threeMin2.default.Group();
+        this.quads = [];
+
+        this.rootQuad = new _Mesh.QuadMesh({
+            height: terrainHeight,
+            width: terrainWidth,
+            position: new _threeMin2.default.Vector3(),
+            heightMap: this.heightMap,
+            LOD: 1,
+            error: terrainWidth
+        });
+
+        this.generateQuadTree(this.rootQuad);
+    }
+
+    // TODO: Convert into breadth-first generation of tree
+
+    _createClass(Terrain, [{
+        key: 'generateQuadTree',
+        value: function generateQuadTree(parentQuad) {
+
+            parentQuad.wireframe = true;
+            parentQuad.visible = false;
+
+            // Add this to our list of quads
+            this.quads.push(parentQuad);
+            // Add this as a child of a group in the scene, so transformations to the group will apply to this quad as well
+            this.mesh.add(parentQuad.mesh);
+
+            if (parentQuad.LOD > 6) {
+                parentQuad._isLeaf = true;
+                return;
+            }
+
+            var currX = parentQuad.position.x;
+            var currY = parentQuad.position.y;
+            var currZ = parentQuad.position.z;
+
+            var xstride = parentQuad.width * 0.5;
+            var ystride = parentQuad.height * 0.5;
+
+            for (var i = 0; i < 4; i++) {
+                var quad = new _Mesh.QuadMesh({
+                    width: parentQuad.width * 0.5,
+                    height: parentQuad.height * 0.5,
+                    position: new _threeMin2.default.Vector3(currX, currY, currZ),
+                    LOD: parentQuad.LOD + 1,
+                    heightMap: parentQuad.heightMap,
+                    error: parentQuad.error * 0.5
+                });
+
+                quad.wireframe = true;
+
+                parentQuad.children.push(quad);
+
+                currX = currX + xstride;
+                if (currX - parentQuad.position.x >= parentQuad.width) {
+                    currX = parentQuad.position.x;
+                    currY = currY + ystride;
+                }
+                this.generateQuadTree(quad);
+            }
+        }
+    }, {
+        key: 'draw',
+        value: function draw(pos) {
+            var perspectiveScalingFactor = arguments.length <= 1 || arguments[1] === undefined ? 1 : arguments[1];
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = this.quads[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var q = _step.value;
+
+                    q.visible = false;
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            this.chunkedLOD(this.rootQuad, pos, perspectiveScalingFactor);
+        }
+
+        // Chunked LOD implementation: http://tulrich.com/geekstuff/sig-notes.pdf
+        // TODO: Optimizations
+        // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
+        // Breadth-first search of quadtree?
+
+    }, {
+        key: 'chunkedLOD',
+        value: function chunkedLOD(quad, pos) {
+            var scalingFactor = arguments.length <= 2 || arguments[2] === undefined ? 1 : arguments[2];
+
+            // TODO: Need to get distance to nearest face, not centroid
+            // We're translating from local mesh coordinates (in this Quad Mesh), to the global coordinates
+            var centroid = new _threeMin2.default.Vector3().copy(quad.centroid);
+            quad.mesh.localToWorld(centroid);
+            // Check the camera distance from world coordinates of this quad to the specified position
+            var distance = pos.distanceTo(centroid);
+
+            // Screen space error
+            var rho = quad.error / distance * scalingFactor;
+
+            // distance = 0 so screenspace error should be 0
+            if (!isFinite(rho)) {
+                rho = 0;
+            }
+            // Largest allowable screen error
+            var tau = 45;
+
+            if (quad._isLeaf || rho <= tau) {
+                quad.visible = true;
+            } else {
+                // TODO: When we implement excluding of whole subbranches, we'll have to turn off visibility for all chunks in that branch
+                var _iteratorNormalCompletion2 = true;
+                var _didIteratorError2 = false;
+                var _iteratorError2 = undefined;
+
+                try {
+                    for (var _iterator2 = quad.children[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                        var c = _step2.value;
+
+                        this.chunkedLOD(c, pos, scalingFactor);
+                    }
+                } catch (err) {
+                    _didIteratorError2 = true;
+                    _iteratorError2 = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                            _iterator2.return();
+                        }
+                    } finally {
+                        if (_didIteratorError2) {
+                            throw _iteratorError2;
+                        }
+                    }
+                }
+            }
+        }
+    }, {
+        key: 'centroid',
+        get: function get() {
+            return getCentroid(this.mesh);
+        }
+    }]);
+
+    return Terrain;
+}();
+
+},{"../vendor/three.min.js":201,"./HeightMap.js":195,"./Mesh.js":196,"./Util.js":199}],199:[function(require,module,exports){
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.randomNumber = randomNumber;
 exports.initArray = initArray;
+exports.getCentroid = getCentroid;
+exports.getBoundingBox = getBoundingBox;
+
+var _threeMin = require('../vendor/three.min.js');
+
+var _threeMin2 = _interopRequireDefault(_threeMin);
+
+var _Mesh = require('../modules/Mesh.js');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var _marked = [randomNumber].map(regeneratorRuntime.mark);
 
@@ -5404,7 +5514,7 @@ function randomNumber(min, max) {
                     break;
 
                 case 5:
-                case "end":
+                case 'end':
                     return _context.stop();
             }
         }
@@ -5425,7 +5535,31 @@ function initArray(length) {
     return arr;
 }
 
-},{}],201:[function(require,module,exports){
+function getCentroid(object) {
+    var box = getBoundingBox(object);
+
+    var centroid = new _threeMin2.default.Vector3();
+    centroid.addVectors(box.min, box.max);
+    centroid.multiplyScalar(0.5);
+    return centroid;
+}
+
+function getBoundingBox(object) {
+
+    var box = new _threeMin2.default.Box3();
+
+    if (object instanceof _threeMin2.default.Object3D) {
+        box.setFromObject(object);
+    } else if (object instanceof _Mesh.Mesh) {
+        box.setFromObject(object.mesh);
+    } else if (object instanceof _threeMin2.default.Box3) {
+        box = object;
+    }
+
+    return box;
+}
+
+},{"../modules/Mesh.js":196,"../vendor/three.min.js":201}],200:[function(require,module,exports){
 "use strict";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
@@ -6087,7 +6221,7 @@ dat.GUI = dat.gui.GUI = function (f, a, d, e, c, b, p, q, l, r, n, u, A, g, k) {
     };return d;
 }(dat.dom.dom, dat.utils.common), dat.dom.dom, dat.utils.common);
 
-},{}],202:[function(require,module,exports){
+},{}],201:[function(require,module,exports){
 // threejs.org/license
 'use strict';var THREE={REVISION:"73"};"function"===typeof define&&define.amd?define("three",THREE):"undefined"!==typeof exports&&"undefined"!==typeof module&&(module.exports=THREE);
 void 0!==self.requestAnimationFrame&&void 0!==self.cancelAnimationFrame||function(){for(var a=0,b=["ms","moz","webkit","o"],c=0;c<b.length&&!self.requestAnimationFrame;++c)self.requestAnimationFrame=self[b[c]+"RequestAnimationFrame"],self.cancelAnimationFrame=self[b[c]+"CancelAnimationFrame"]||self[b[c]+"CancelRequestAnimationFrame"];void 0===self.requestAnimationFrame&&void 0!==self.setTimeout&&(self.requestAnimationFrame=function(b){var c=Date.now(),g=Math.max(0,16-(c-a)),f=self.setTimeout(function(){b(c+
@@ -6959,7 +7093,7 @@ THREE.MorphBlendMesh.prototype.getAnimationDuration=function(a){var b=-1;if(a=th
 THREE.MorphBlendMesh.prototype.update=function(a){for(var b=0,c=this.animationsList.length;b<c;b++){var d=this.animationsList[b];if(d.active){var e=d.duration/d.length;d.time+=d.direction*a;if(d.mirroredLoop){if(d.time>d.duration||0>d.time)d.direction*=-1,d.time>d.duration&&(d.time=d.duration,d.directionBackwards=!0),0>d.time&&(d.time=0,d.directionBackwards=!1)}else d.time%=d.duration,0>d.time&&(d.time+=d.duration);var g=d.start+THREE.Math.clamp(Math.floor(d.time/e),0,d.length-1),f=d.weight;g!==d.currentFrame&&
 (this.morphTargetInfluences[d.lastFrame]=0,this.morphTargetInfluences[d.currentFrame]=1*f,this.morphTargetInfluences[g]=0,d.lastFrame=d.currentFrame,d.currentFrame=g);e=d.time%e/e;d.directionBackwards&&(e=1-e);d.currentFrame!==d.lastFrame?(this.morphTargetInfluences[d.currentFrame]=e*f,this.morphTargetInfluences[d.lastFrame]=(1-e)*f):this.morphTargetInfluences[d.currentFrame]=f}}};
 
-},{}],203:[function(require,module,exports){
+},{}],202:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7642,7 +7776,7 @@ _threeMin2.default.OrbitControls.prototype.constructor = _threeMin2.default.Orbi
 
 exports.default = _threeMin2.default.OrbitControls;
 
-},{"../vendor/three.min.js":202}],204:[function(require,module,exports){
+},{"../vendor/three.min.js":201}],203:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

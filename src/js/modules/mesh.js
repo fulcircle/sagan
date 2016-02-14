@@ -88,6 +88,7 @@ export class TerrainMesh extends TriangleMesh {
     }
 
     getHeight(x, y) {
+        return 0;
         if (!this.heightMap) {
             return 0;
         } else {
@@ -146,4 +147,26 @@ export class QuadMesh extends TerrainMesh {
         this.error = error;
         this.children = [];
     }
+
+    // Spherify
+    update(vertexPositions) {
+        //for (var i = 0; i < vertexPositions.length; i++) {
+        //    let x = vertexPositions[i][0];
+        //    let y = vertexPositions[i][1];
+        //    let z = vertexPositions[i][2];
+        //
+        //    let v = new THREE.Vector3(x, y, z);
+        //    this.mesh.localToWorld(v);
+        //
+        //    v.normalize();
+        //
+        //    vertexPositions[i][0] = v.x * this.width;
+        //    vertexPositions[i][1] = v.y * this.width;
+        //    vertexPositions[i][2] = v.z * this.width;
+        //
+        //}
+
+        super.update(vertexPositions);
+    }
+
 }

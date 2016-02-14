@@ -1,7 +1,7 @@
 import "babel-polyfill";
 import { Controls } from './modules/Controls.js'
 import { Engine } from './modules/Engine.js'
-import { PlanetGenerator } from './modules/PlanetGenerator.js'
+import { Planet } from './modules/Planet.js'
 import THREE from './vendor/three.min.js';
 
 let engine = new Engine(document.body);
@@ -10,17 +10,16 @@ document.body.appendChild(engine.domElement);
 //let controls = new Controls();
 //controls.addControl(quad, 'LOD').min(1).max(4).step(1);
 
-let TERRAIN_HEIGHT = 128;
-let TERRAIN_WIDTH = 128;
+let radius = 128;
+let planet = new Planet(engine, radius);
 
-//let generator = new TerrainGenerator(engine, TERRAIN_HEIGHT, TERRAIN_WIDTH, HeightMapFuncs.SinRandom.func);
-//generator.generate();
+var axisHelper = new THREE.AxisHelper( radius*2 );
+engine.add( axisHelper );
 
-window.generator = new PlanetGenerator(engine, TERRAIN_WIDTH);
-
-engine.camera.position = new THREE.Vector3(TERRAIN_WIDTH/2, TERRAIN_HEIGHT/2, 20);
-engine.camera.focus(new THREE.Vector3(TERRAIN_WIDTH/2, TERRAIN_HEIGHT/2, 0));
+engine.camera.position = new THREE.Vector3(planet.centroid.x, planet.centroid.y, 20);
+engine.camera.focus(planet.centroid);
 
 engine.render();
 
 window.engine = engine;
+window.planet = planet;
