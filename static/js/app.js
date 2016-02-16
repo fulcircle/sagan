@@ -5002,8 +5002,6 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
     function TerrainMesh(_ref) {
         var width = _ref.width;
         var height = _ref.height;
-        var _ref$position = _ref.position;
-        var position = _ref$position === undefined ? new _threeMin2.default.Vector3() : _ref$position;
         var _ref$heightMap = _ref.heightMap;
         var heightMap = _ref$heightMap === undefined ? null : _ref$heightMap;
         var _ref$LOD = _ref.LOD;
@@ -5020,7 +5018,6 @@ var TerrainMesh = exports.TerrainMesh = function (_TriangleMesh) {
         _this2.heightMap = heightMap;
 
         _this2.LOD = LOD;
-        _this2.position = position;
         return _this2;
     }
 
@@ -5088,8 +5085,6 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
     function QuadMesh(_ref2) {
         var width = _ref2.width;
         var height = _ref2.height;
-        var _ref2$position = _ref2.position;
-        var position = _ref2$position === undefined ? new _threeMin2.default.Vector3() : _ref2$position;
         var heightMap = _ref2.heightMap;
         var _ref2$LOD = _ref2.LOD;
         var LOD = _ref2$LOD === undefined ? 1 : _ref2$LOD;
@@ -5098,31 +5093,29 @@ var QuadMesh = exports.QuadMesh = function (_TerrainMesh) {
 
         _classCallCheck(this, QuadMesh);
 
-        var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(QuadMesh).call(this, { width: width, height: height, position: position, heightMap: heightMap, LOD: LOD }));
+        var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(QuadMesh).call(this, { width: width, height: height, heightMap: heightMap, LOD: LOD }));
 
         _this3.error = error;
         _this3.children = [];
         return _this3;
     }
 
-    // Spherify
-
     _createClass(QuadMesh, [{
         key: 'spherify',
-        value: function spherify() {
+        value: function spherify(radius) {
             var vertices = this.mesh.geometry.attributes.position.array;
-            for (var i = 0; i < vertices.length; i++) {
-                var x = vertices[i * 3 + 0];
-                var y = vertices[i * 3 + 1];
-                var z = vertices[i * 3 + 2];
+            for (var i = 0; i < vertices.length; i += 3) {
+                var x = vertices[i + 0];
+                var y = vertices[i + 1];
+                var z = vertices[i + 2];
 
                 var v = new _threeMin2.default.Vector3(x, y, z);
-                v.applyMatrix4(this.mesh.matrixWorld);
+                this.mesh.localToWorld(v);
                 v.normalize();
 
-                vertices[i * 3 + 0] = v.x * this.width;
-                vertices[i * 3 + 1] = v.y * this.width;
-                vertices[i * 3 + 2] = v.z * this.width;
+                vertices[i + 0] = v.x;
+                vertices[i + 1] = v.y;
+                vertices[i + 2] = v.z;
             }
 
             this.mesh.geometry.needsUpdate = true;
@@ -5164,61 +5157,76 @@ var Planet = exports.Planet = function () {
         this.cube = new _threeMin2.default.Group();
         engine.add(this.cube);
 
-        var sides = [{
-            axis: 'x',
-            degrees: '90'
-        }, {
-            axis: 'y',
-            degrees: '-90'
-        }, {
-            axis: 'z',
-            degrees: '0'
-        }, {
+        // Going to spherize the terrain cube, so we make each face 90 degree extent from center of cube
+        var terrain_size = Math.round(Math.sqrt(2 * radius * radius));
+        // Round to nearest multiple of 2 since we're using quads
+        terrain_size = Math.round(terrain_size / 2) * 2;
+
+        console.log('Sphere radius: ' + radius);
+        console.log('Cube face size: ' + terrain_size);
+
+        var sides = [
+        //{
+        //    axis: 'x',
+        //    degrees: '90'
+        //},
+        //{
+        //    axis: 'y',
+        //    degrees: '-90'
+        //},
+        //{
+        //    axis: 'z',
+        //    degrees: '0'
+        //},
+        {
             axis: 'x',
             degrees: '90',
             translation: {
                 x: 0,
-                y: radius,
-                z: 0
-            }
-        }, {
-            translation: {
-                x: 0,
-                y: 0,
-                z: radius
-            }
-        }, {
-            axis: 'y',
-            degrees: '-90',
-            translation: {
-                x: radius,
-                y: 0,
+                y: terrain_size,
                 z: 0
             }
         }];
 
         var _loop = function _loop() {
-            var terrain = new _Terrain.Terrain(radius, radius, _Terrain.HeightMapFuncs.SinRandom.func);
-            if (sides[i].translation) {
-                terrain.mesh.translateZ(sides[i].translation.z);
-                terrain.mesh.translateY(sides[i].translation.y);
-                terrain.mesh.translateX(sides[i].translation.x);
-            }
-            if (sides[i].axis) {
-                terrain.mesh.rotation[sides[i].axis] = _threeMin2.default.Math.degToRad(sides[i].degrees);
-            }
+            var terrain = new _Terrain.Terrain(terrain_size, _Terrain.HeightMapFuncs.SinRandom.func);
+            //if (sides[i].translation) {
+            //    terrain.mesh.translateZ(sides[i].translation.z);
+            //    terrain.mesh.translateY(sides[i].translation.y);
+            //    terrain.mesh.translateX(sides[i].translation.x);
+            //}
+            //if (sides[i].axis) {
+            //    terrain.mesh.rotation[sides[i].axis] = THREE.Math.degToRad(sides[i].degrees);
+            //}
 
             // Add this terrain as one of our cube faces
             _this.cube.add(terrain.mesh);
 
             //for (let q of terrain.quads) {
-            //    q.spherify();
+            //    q.spherify(radius);
             //}
 
             engine.renderFuncs.push(function () {
                 terrain.draw(engine.camera.position, engine.camera.perspectiveScalingFactor);
             });
         };
+
+        //{
+        //   translation: {
+        //       x: 0,
+        //       y: 0,
+        //       z: terrain_size
+        //   }
+        //},
+        //{
+        //    axis: 'y',
+        //    degrees: '-90',
+        //    translation: {
+        //        x: terrain_size,
+        //        y: 0,
+        //        z: 0
+        //    }
+        //}
 
         for (var i = 0; i < sides.length; i++) {
             _loop();
@@ -5270,25 +5278,27 @@ var HeightMapFuncs = exports.HeightMapFuncs = {
 };
 
 var Terrain = exports.Terrain = function () {
-    function Terrain(terrainHeight, terrainWidth, heightMapFunc) {
+    function Terrain(terrainSize, heightMapFunc) {
         _classCallCheck(this, Terrain);
 
         // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
-        this.heightMap = new _HeightMap.HeightMap(terrainHeight + 1, terrainWidth + 1, heightMapFunc);
+        this.heightMap = new _HeightMap.HeightMap(terrainSize + 1, terrainSize + 1, heightMapFunc);
 
         this.mesh = new _threeMin2.default.Group();
 
         this.quads = [];
 
         this.rootQuad = new _Mesh.QuadMesh({
-            height: terrainHeight,
-            width: terrainWidth,
+            height: terrainSize,
+            width: terrainSize,
             position: new _threeMin2.default.Vector3(),
             heightMap: this.heightMap,
             LOD: 1,
-            error: terrainWidth
+            error: terrainSize
         });
 
+        this.rootQuad.generate();
+        this.mesh.add(this.rootQuad.mesh);
         this.generateQuadTree(this.rootQuad);
     }
 
@@ -5300,12 +5310,10 @@ var Terrain = exports.Terrain = function () {
 
             parentQuad.wireframe = true;
             parentQuad.visible = false;
-            parentQuad.generate();
 
             // Add this to our list of quads
             this.quads.push(parentQuad);
             // Add this as a child of a group in the scene, so transformations to the group will apply to this quad as well
-            this.mesh.add(parentQuad.mesh);
 
             if (parentQuad.LOD > 6) {
                 parentQuad._isLeaf = true;
@@ -5330,8 +5338,10 @@ var Terrain = exports.Terrain = function () {
                 });
 
                 quad.wireframe = true;
+                quad.generate();
 
                 parentQuad.children.push(quad);
+                parentQuad.mesh.add(quad.mesh);
 
                 currX = currX + xstride;
                 if (currX - parentQuad.position.x >= parentQuad.width) {

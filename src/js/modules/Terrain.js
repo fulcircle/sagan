@@ -15,24 +15,26 @@ export const HeightMapFuncs = {
 
 export class Terrain {
 
-    constructor(terrainHeight, terrainWidth, heightMapFunc) {
+    constructor(terrainSize, heightMapFunc) {
 
         // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
-        this.heightMap = new HeightMap(terrainHeight + 1, terrainWidth + 1, heightMapFunc);
+        this.heightMap = new HeightMap(terrainSize + 1, terrainSize + 1, heightMapFunc);
 
         this.mesh = new THREE.Group();
 
         this.quads = [];
 
         this.rootQuad = new QuadMesh({
-            height: terrainHeight,
-            width: terrainWidth,
+            height: terrainSize,
+            width: terrainSize,
             position: new THREE.Vector3(),
             heightMap: this.heightMap,
             LOD: 1,
-            error: terrainWidth
+            error: terrainSize
         });
 
+        this.rootQuad.generate();
+        this.mesh.add(this.rootQuad.mesh);
         this.generateQuadTree(this.rootQuad);
 
     }
@@ -42,12 +44,10 @@ export class Terrain {
 
         parentQuad.wireframe = true;
         parentQuad.visible = false;
-        parentQuad.generate();
 
         // Add this to our list of quads
         this.quads.push(parentQuad);
         // Add this as a child of a group in the scene, so transformations to the group will apply to this quad as well
-        this.mesh.add(parentQuad.mesh);
 
 
         if (parentQuad.LOD > 6) {
@@ -73,8 +73,10 @@ export class Terrain {
             });
 
             quad.wireframe = true;
+            quad.generate();
 
             parentQuad.children.push(quad);
+            parentQuad.mesh.add(quad.mesh);
 
             currX = currX + xstride;
             if ((currX - parentQuad.position.x) >= parentQuad.width) {

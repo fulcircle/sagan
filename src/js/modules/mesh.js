@@ -75,7 +75,7 @@ export class TriangleMesh extends Mesh {
 
 export class TerrainMesh extends TriangleMesh {
 
-    constructor({width, height, position=new THREE.Vector3(), heightMap=null, LOD=1}) {
+    constructor({width, height, heightMap=null, LOD=1}) {
         super();
         this.width = width;
         this.height = height;
@@ -84,7 +84,6 @@ export class TerrainMesh extends TriangleMesh {
         this.heightMap = heightMap;
 
         this.LOD = LOD;
-        this.position = position;
     }
 
     getHeight(x, y) {
@@ -142,27 +141,26 @@ export class TerrainMesh extends TriangleMesh {
 
 export class QuadMesh extends TerrainMesh {
 
-    constructor({width, height, position=new THREE.Vector3(), heightMap, LOD=1, error=0}) {
-        super({width, height, position, heightMap, LOD});
+    constructor({width, height, heightMap, LOD=1, error=0}) {
+        super({width, height, heightMap, LOD});
         this.error = error;
         this.children = [];
     }
 
-    // Spherify
-    spherify() {
+    spherify(radius) {
         let vertices = this.mesh.geometry.attributes.position.array;
-        for (var i = 0; i < vertices.length; i++) {
-            let x = vertices[i * 3 + 0];
-            let y = vertices[i * 3 + 1];
-            let z = vertices[i * 3 + 2];
+        for (var i = 0; i < vertices.length; i+=3) {
+            let x = vertices[i + 0];
+            let y = vertices[i + 1];
+            let z = vertices[i + 2];
 
             let v = new THREE.Vector3(x, y, z);
-            v.applyMatrix4(this.mesh.matrixWorld);
+            this.mesh.localToWorld(v);
             v.normalize();
 
-            vertices[i * 3 + 0] = v.x * this.width;
-            vertices[i * 3 + 1] = v.y * this.width;
-            vertices[i * 3 + 2] = v.z * this.width;
+            vertices[i + 0] = v.x;
+            vertices[i + 1] = v.y;
+            vertices[i + 2] = v.z;
 
         }
 
