@@ -9,7 +9,6 @@ public class QuadMesh : MonoBehaviour {
 
     public float spacing = 1f;
 	public float maxHeight = 3f;
-	public MeshFilter terrainMesh = null;
 
     private float stride;
     private int lod = 1;
@@ -17,7 +16,10 @@ public class QuadMesh : MonoBehaviour {
     public int LOD {
         set {
             this.lod = value;
+            Debug.Log("Setting lod to " + this.lod);
             this.stride = this.width / (float)value;
+            Debug.Log("Stride is " + this.stride);
+            Generate();
         }
 
         get {
@@ -29,10 +31,6 @@ public class QuadMesh : MonoBehaviour {
 	{
         transform.position = new Vector3(0, 0, 0);
         LOD = 16;
-        Debug.Log("Setting lod to " + this.lod);
-        Debug.Log("Stride is " + this.stride);
-
-		Generate();
 	}
 
 	void Generate() {
