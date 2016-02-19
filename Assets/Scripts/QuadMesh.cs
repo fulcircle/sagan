@@ -27,12 +27,6 @@ public class QuadMesh : MonoBehaviour {
         }
     }
 
-	void Start()
-	{
-        transform.position = new Vector3(0, 0, 0);
-        LOD = 16;
-	}
-
 	void Generate() {
 		float start_time = Time.time;
 

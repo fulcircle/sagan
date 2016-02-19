@@ -8,10 +8,12 @@ public class SaganTerrain : MonoBehaviour {
 
     protected List<QuadMesh> quads = new List<QuadMesh>();
 
-    protected QuadMesh rootQuad = GetComponent<GameObject>().AddComponent<QuadMesh>();
+    protected QuadMesh rootQuad;
 
     void Start() {
         transform.position = new Vector3(0,0,0);
+
+        rootQuad = GetComponent<GameObject>().AddComponent<QuadMesh>();
 
         rootQuad.width = 10;
         rootQuad.LOD = 2;
