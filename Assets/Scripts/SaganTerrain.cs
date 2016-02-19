@@ -6,16 +6,21 @@ public class SaganTerrain : MonoBehaviour {
 
     public int terrainSize = 10;
 
-    protected List<QuadMesh> quads = new List<QuadMesh>();
+    private List<QuadMesh> quads = new List<QuadMesh>();
 
-    protected QuadMesh rootQuad;
+    private QuadMesh rootQuad;
 
     void Start() {
         transform.position = new Vector3(0,0,0);
 
-        rootQuad = GetComponent<GameObject>().AddComponent<QuadMesh>();
+        GameObject rootQuadGO = new GameObject("RootQuad");
 
-        rootQuad.width = 10;
+        rootQuad = rootQuadGO.AddComponent<QuadMesh>();
+        rootQuadGO.AddComponent<MeshFilter>();
+        rootQuadGO.AddComponent<MeshRenderer>();
+
+        rootQuad.width = terrainSize;
         rootQuad.LOD = 2;
     }
+
 }

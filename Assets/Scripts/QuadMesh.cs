@@ -27,6 +27,10 @@ public class QuadMesh : MonoBehaviour {
         }
     }
 
+    void Start() {
+        GetComponent<MeshRenderer>().material.color = Color.green;
+    }
+
 	void Generate() {
 		float start_time = Time.time;
 
