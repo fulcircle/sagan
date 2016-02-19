@@ -4,8 +4,7 @@ using System.Collections.Generic;
 
 public class QuadMesh : MonoBehaviour {
 
-	public int width = 10;
-    public int height = 10;
+	public float size = 10f;
 
     public float spacing = 1f;
 	public float maxHeight = 3f;
@@ -17,7 +16,7 @@ public class QuadMesh : MonoBehaviour {
         set {
             this.lod = value;
             Debug.Log("Setting lod to " + this.lod);
-            this.stride = this.width / (float)value;
+            this.stride = this.size / (float)value;
             Debug.Log("Stride is " + this.stride);
             Generate();
         }
@@ -41,8 +40,8 @@ public class QuadMesh : MonoBehaviour {
         Mesh mesh = new Mesh();
 
         int offset = 0;
-        for (float x = 0; x <= width - stride; x = x + stride) {
-            for (float z = 0; z <= height - stride; z = z + stride) {
+        for (float x = 0; x <= size - stride; x = x + stride) {
+            for (float z = 0; z <= size - stride; z = z + stride) {
 
                 //Create two triangles that will generate a square
 
