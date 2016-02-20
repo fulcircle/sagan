@@ -18,14 +18,25 @@ namespace Sagan.Terrain {
 
         }
 
+        public void Update() {
+            foreach (Quad q in _quads) {
+                q.active = false;
+            }
+            this.chunkedLOD(rootQuad);
+        }
+
         void GenerateQuadTree(Quad parentQuad) {
 
             parentQuad.Generate();
+
+            this._quads.Add(parentQuad);
 
             if (parentQuad.LOD == this.levels) {
                 parentQuad.isLeaf = true;
                 return;
             }
+
+            parentQuad.isLeaf = false;
 
             var currX = parentQuad.transform.position.x;
             var currY = parentQuad.transform.position.y;
@@ -39,7 +50,6 @@ namespace Sagan.Terrain {
                 parentQuad.children.Add(childQuad);
 
                 childQuad.transform.position = new Vector3(currX, currY, currZ);
-                Debug.Log(childQuad.transform.position);
 
                 GenerateQuadTree(childQuad);
 
@@ -56,22 +66,19 @@ namespace Sagan.Terrain {
         // Chunked LOD implementation: http://tulrich.com/geekstuff/sig-notes.pdf
         // TODO: Optimizations
         // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
-        void chunkedLOD(Quad quad, float scalingFactor=1) {
+        void chunkedLOD(Quad quad, float scalingFactor=1.0f) {
 
-            // TODO: Need to get distance to nearest face, not centroid
             // TODO: Get closest point from camera, not origin
-            Vector3 closestPoint = quad.mesh.bounds.ClosestPoint(new Vector3(0,0,0));
+            quad.mesh.RecalculateBounds();
+            Vector3 closestPoint = quad.boundingBox.ClosestPoint(new Vector3(0,0,0));
             float distance = Vector3.Distance(closestPoint, new Vector3(0,0,0));
+
 
             // Screen space error
             float rho = (quad.error / distance ) * scalingFactor;
 
-            // distance = 0 so screenspace error should be 0
-            //        if (!isFinite(rho)) {
-            //            rho = 0;
-            //        }
             // Largest allowable screen error
-            float tau = 45;
+            float tau = 0.4f;
 
             if (quad.isLeaf || rho <= tau) {
                 quad.active = true;

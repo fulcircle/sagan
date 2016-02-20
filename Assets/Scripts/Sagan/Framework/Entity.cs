@@ -31,6 +31,15 @@ namespace Sagan.Framework {
             }
         }
 
+        /// <summary>
+        /// Returns the Axis-Aligned Bounding Box in world space
+        /// </summary>
+        public Bounds boundingBox {
+            get {
+                return gameObject.GetComponent<Renderer>().bounds;
+            }
+        }
+
         public Entity() {
             gameObject = new GameObject();
         }

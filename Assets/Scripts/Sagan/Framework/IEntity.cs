@@ -16,6 +16,10 @@ namespace Sagan.Framework {
             get;
         }
 
+        Bounds boundingBox {
+            get;
+        }
+
         bool active {
             get; set;
         }
