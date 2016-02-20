@@ -11,6 +11,10 @@ public class QuadMesh : MonoBehaviour {
 
     private float stride;
     private int lod = 1;
+    public bool isLeaf = false;
+    public float error;
+
+    public List<QuadMesh> children = new List<QuadMesh>();
 
     public int LOD {
         set {
@@ -18,7 +22,6 @@ public class QuadMesh : MonoBehaviour {
             Debug.Log("Setting lod to " + this.lod);
             this.stride = this.size / (float)value;
             Debug.Log("Stride is " + this.stride);
-            Generate();
         }
 
         get {

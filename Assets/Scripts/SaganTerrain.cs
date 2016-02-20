@@ -8,12 +8,16 @@ public class SaganTerrain : MonoBehaviour {
 
     private List<QuadMesh> quads = new List<QuadMesh>();
 
-    private QuadMesh rootQuad;
+    private GameObject rootQuadGO;
 
     void Start() {
         transform.position = new Vector3(0,0,0);
 
-        var rootQuadGO = newQuad(terrainSize, 1);
+        rootQuadGO = newQuad();
+        var rootQuad = rootQuadGO.GetComponent<QuadMesh>();
+        rootQuad.size = terrainSize;
+        rootQuad.LOD = 1;
+        rootQuad.error = terrainSize;
 
         GenerateQuadTree(rootQuadGO);
     }
@@ -33,8 +37,14 @@ public class SaganTerrain : MonoBehaviour {
         var stride = parentQuad.size * 0.5f;
 
         for (int i=0; i < 4; i++) {
-            var quadGO = newQuad(parentQuad.size * 0.5f, parentQuad.LOD + 1);
+            var quadGO = newQuad();
             var quadMesh = quadGO.GetComponent<QuadMesh>();
+
+            quadMesh.size = parentQuad.size * 0.5f;
+            quadMesh.LOD = parentQuad.LOD + 1;
+            quadMesh.error = parentQuad.error * 0.5f;
+
+            quadMesh.children.Add(quadMesh);
 
             quadMesh.transform.position = new Vector3(currX, currY, currZ);
 
@@ -47,17 +57,52 @@ public class SaganTerrain : MonoBehaviour {
         }
     }
 
-    GameObject newQuad(float size, int LOD) {
+    void Update() {
+        foreach (var quadGO in GameObject.FindGameObjectsWithTag("Quad")) {
+            quadGO.SetActive(false);
+        }
+
+        this.chunkedLOD(rootQuadGO);
+    }
+
+    GameObject newQuad() {
         var quadGO = new GameObject();
+        quadGO.tag = "Quad";
         quadGO.AddComponent<MeshFilter>();
         quadGO.AddComponent<MeshRenderer>();
 
-        var quadMesh = quadGO.AddComponent<QuadMesh>();
-
-        quadMesh.size = size;
-        quadMesh.LOD = LOD;
-
         return quadGO;
+    }
+
+    // Chunked LOD implementation: http://tulrich.com/geekstuff/sig-notes.pdf
+    // TODO: Optimizations
+    // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
+    void chunkedLOD(GameObject quadGO, float scalingFactor=1) {
+
+        // TODO: Need to get distance to nearest face, not centroid
+        // TODO: Get closest point from camera, not origin
+        QuadMesh quadMesh = quadGO.GetComponent<QuadMesh>();
+        Vector3 closestPoint = quadGO.GetComponent<MeshFilter>().mesh.bounds.ClosestPoint(new Vector3(0,0,0));
+        float distance = Vector3.Distance(closestPoint, new Vector3(0,0,0));
+
+        // Screen space error
+        float rho = (quadMesh.error / distance ) * scalingFactor;
+
+        // distance = 0 so screenspace error should be 0
+//        if (!isFinite(rho)) {
+//            rho = 0;
+//        }
+        // Largest allowable screen error
+        float tau = 45;
+
+        if (quadMesh.isLeaf || rho <= tau) {
+            quadGO.SetActive(true);
+        } else {
+            // TODO: When we implement excluding of whole subbranches, we'll have to turn off visibility for all chunks in that branch
+            foreach (QuadMesh quad in quadMesh.children) {
+                this.chunkedLOD(quad.gameObject, scalingFactor);
+            }
+        }
     }
 
 }
