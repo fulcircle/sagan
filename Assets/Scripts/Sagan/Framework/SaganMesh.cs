@@ -48,7 +48,7 @@ namespace Sagan.Framework {
         }
 
 
-        public SaganMesh() : base() {
+        public SaganMesh(string name) : base(name) {
             gameObject.AddComponent<MeshFilter>();
             gameObject.AddComponent<MeshRenderer>();
         }

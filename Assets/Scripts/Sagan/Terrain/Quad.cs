@@ -25,12 +25,15 @@ namespace Sagan.Terrain {
         private int _lod;
         private float _stride;
         private float _maxHeight = 20;
+        private HeightMap _heightMap;
 
-        public Quad(int LOD, float size, float error) : base() {
+        public Quad(int LOD, float size, float error, HeightMap heightMap) : base("Quad") {
             this.size = size;
             this.LOD = LOD;
 
             this.error = error;
+
+            this._heightMap = heightMap;
         }
 
 
@@ -55,17 +58,23 @@ namespace Sagan.Terrain {
                     float z0 = z;
                     float z1 = z + this._stride;
 
+                    float offsetx = transform.position.x;
+                    float offsetz = transform.position.z;
+
+                    // We want the height at the offset that this Quad is from it's parent (the Terrain object)
+                    float xh0 = x0 + offsetx;
+                    float zh0 = z0 + offsetz;
+                    float xh1 = x1 + offsetx;
+                    float zh1 = z1 + offsetz;
+
                     // TODO: We're not sharing vertices, set triangles to share vertices
-                    Vector3 worldPoint0 = transform.TransformPoint(x0, 0, z0);
-                    Vector3 worldPoint1 = transform.TransformPoint(x1, 0, z1);
+                    verts.Add(new Vector3(x1, GetHeight(xh1, zh0), z0)); // Shared vertex
+                    verts.Add(new Vector3(x0, GetHeight(xh0, zh0), z0));
+                    verts.Add(new Vector3(x0, GetHeight(xh0, zh1), z1)); // Shared vertex
 
-                    verts.Add(new Vector3(x1, GetHeight(worldPoint1.x, worldPoint0.z), z0)); // Shared vertex
-                    verts.Add(new Vector3(x0, GetHeight(worldPoint0.x, worldPoint0.z), z0));
-                    verts.Add(new Vector3(x0, GetHeight(worldPoint0.x, worldPoint1.z), z1)); // Shared vertex
-
-                    verts.Add(new Vector3(x1, GetHeight(worldPoint1.x, worldPoint0.z), z0));
-                    verts.Add(new Vector3(x0, GetHeight(worldPoint0.x, worldPoint1.z), z1));
-                    verts.Add(new Vector3(x1, GetHeight(worldPoint1.x, worldPoint1.z), z1));
+                    verts.Add(new Vector3(x1, GetHeight(xh1, zh0), z0));
+                    verts.Add(new Vector3(x0, GetHeight(xh0, zh1), z1));
+                    verts.Add(new Vector3(x1, GetHeight(xh1, zh1), z1));
 
                     // Add first triangle
                     tris.AddRange(new int[] {offset, offset + 1, offset + 2});
@@ -84,15 +93,8 @@ namespace Sagan.Terrain {
             float diff = Time.time - start_time;
         }
 
-        float GetHeight(float x_coor, float z_coor) {
-            return 0;
-            float y_coor =
-            Mathf.Min(
-                    0,
-                    _maxHeight - Vector2.Distance(Vector2.zero, new Vector2(x_coor, z_coor)
-                    )
-            );
-            return y_coor;
+        float GetHeight(float x, float z) {
+            return this._heightMap.GetHeight(x, z);
         }
     }
 }
