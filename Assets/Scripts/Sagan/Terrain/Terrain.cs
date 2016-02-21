@@ -27,7 +27,7 @@ namespace Sagan.Terrain {
             foreach (Quad q in _quads) {
                 q.active = false;
             }
-            this.chunkedLOD(rootQuad, cam.perspectiveScalingFactor);
+            this.ChunkedLOD(rootQuad, cam.perspectiveScalingFactor);
         }
 
         void GenerateQuadTree(Quad parentQuad) {
@@ -71,7 +71,7 @@ namespace Sagan.Terrain {
         // Chunked LOD implementation: http://tulrich.com/geekstuff/sig-notes.pdf
         // TODO: Optimizations
         // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
-        void chunkedLOD(Quad quad, float scalingFactor=1.0f) {
+        void ChunkedLOD(Quad quad, float scalingFactor=1.0f) {
 
             // TODO: Get closest point from camera, not origin
             quad.mesh.RecalculateBounds();
@@ -91,7 +91,7 @@ namespace Sagan.Terrain {
             } else {
                 // TODO: When we implement excluding of whole subbranches, we'll have to turn off visibility for all chunks in that branch
                 foreach (Quad q in quad.children) {
-                    this.chunkedLOD(q, scalingFactor);
+                    this.ChunkedLOD(q, scalingFactor);
                 }
             }
         }

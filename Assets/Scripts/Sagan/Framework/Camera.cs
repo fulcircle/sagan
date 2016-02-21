@@ -18,7 +18,7 @@ namespace Sagan.Framework {
 
             set {
                 this.camera.fieldOfView = value;
-                this.updateFOV();
+                this.UpdateFOV();
             }
         }
 
@@ -37,10 +37,10 @@ namespace Sagan.Framework {
         public Camera(UnityEngine.Camera camera) : base() {
             this.camera = camera;
             this.gameObject = camera.gameObject;
-            this.updateFOV();
+            this.UpdateFOV();
         }
 
-        public void updateFOV() {
+        public void UpdateFOV() {
             var radVFOV = Mathf.Deg2Rad * this.camera.fieldOfView;
             var radHFOV = 2 * Mathf.Atan( Mathf.Tan( radVFOV * 0.5f ) * this.camera.aspect);
 
