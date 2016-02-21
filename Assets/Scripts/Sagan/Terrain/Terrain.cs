@@ -9,17 +9,37 @@ namespace Sagan.Terrain {
 
         private List<Quad> _quads = new List<Quad>();
 
-        private Quad rootQuad;
+        private GameObject _parent;
+
+        public Quad rootQuad {
+            get;
+            private set;
+        }
+
         private int levels;
         private Camera cam;
+        public HeightMap heightMap {
+            get;
+            private set;
+        }
 
-        public Terrain(int terrainSize, int levels, Camera cam) {
+        public Terrain(int terrainSize, int levels, Camera cam, GameObject parent) {
             this.levels = levels;
 
-            this.rootQuad = new Quad(1, 10, 10);
-            this.GenerateQuadTree(rootQuad);
+            // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
+            this.heightMap = new HeightMap(terrainSize + 1);
+
+            this._parent = parent;
+
+            this.rootQuad = new Quad(1, 10, 10, this.heightMap);
+
 
             this.cam = cam;
+
+            this.GenerateQuadTree(rootQuad);
+
+
+
 
         }
 
@@ -27,10 +47,12 @@ namespace Sagan.Terrain {
             foreach (Quad q in _quads) {
                 q.active = false;
             }
-            this.chunkedLOD(rootQuad, cam.perspectiveScalingFactor);
+            this.ChunkedLOD(rootQuad, cam.perspectiveScalingFactor);
         }
 
         void GenerateQuadTree(Quad parentQuad) {
+
+            parentQuad.transform.parent = this._parent.transform;
 
             parentQuad.Generate();
 
@@ -50,7 +72,10 @@ namespace Sagan.Terrain {
             var stride = parentQuad.size * 0.5f;
 
             for (int i=0; i < 4; i++) {
-                var childQuad = new Quad(parentQuad.LOD + 1, parentQuad.size * 0.5f, parentQuad.size * 0.5f);
+                var childQuad = new Quad(parentQuad.LOD + 1,
+                        parentQuad.size * 0.5f,
+                        parentQuad.size * 0.5f,
+                        this.heightMap);
 
                 parentQuad.children.Add(childQuad);
 
@@ -71,14 +96,13 @@ namespace Sagan.Terrain {
         // Chunked LOD implementation: http://tulrich.com/geekstuff/sig-notes.pdf
         // TODO: Optimizations
         // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
-        void chunkedLOD(Quad quad, float scalingFactor=1.0f) {
+        void ChunkedLOD(Quad quad, float scalingFactor=1.0f) {
 
             // TODO: Get closest point from camera, not origin
             quad.mesh.RecalculateBounds();
             var camPos = this.cam.transform.position;
             Vector3 closestPoint = quad.boundingBox.ClosestPoint(camPos);
             float distance = Vector3.Distance(closestPoint, camPos);
-
 
             // Screen space error
             float rho = (quad.error / distance ) * scalingFactor;
@@ -91,7 +115,7 @@ namespace Sagan.Terrain {
             } else {
                 // TODO: When we implement excluding of whole subbranches, we'll have to turn off visibility for all chunks in that branch
                 foreach (Quad q in quad.children) {
-                    this.chunkedLOD(q, scalingFactor);
+                    this.ChunkedLOD(q, scalingFactor);
                 }
             }
         }

@@ -26,8 +26,8 @@ namespace Sagan.Framework {
             }
         }
 
-        public SaganObject() {
-            gameObject = new GameObject();
+        public SaganObject(string name) {
+            gameObject = new GameObject(name);
         }
 
     }
