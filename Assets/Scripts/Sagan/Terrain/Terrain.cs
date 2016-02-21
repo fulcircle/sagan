@@ -1,5 +1,7 @@
+using Sagan.Framework;
 using System.Collections.Generic;
 using UnityEngine;
+using Camera = Sagan.Framework.Camera;
 
 namespace Sagan.Terrain {
 
@@ -70,8 +72,9 @@ namespace Sagan.Terrain {
 
             // TODO: Get closest point from camera, not origin
             quad.mesh.RecalculateBounds();
-            Vector3 closestPoint = quad.boundingBox.ClosestPoint(new Vector3(0,0,0));
-            float distance = Vector3.Distance(closestPoint, new Vector3(0,0,0));
+            var camPos = Camera.mainCamera.transform.position;
+            Vector3 closestPoint = quad.boundingBox.ClosestPoint(camPos);
+            float distance = Vector3.Distance(closestPoint, camPos);
 
 
             // Screen space error

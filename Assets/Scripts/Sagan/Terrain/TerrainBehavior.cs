@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Sagan.Terrain.Behavior {
 
-    public class Terrain : MonoBehaviour {
+    public class TerrainBehavior : MonoBehaviour {
 
         private Sagan.Terrain.Terrain terrain;
 

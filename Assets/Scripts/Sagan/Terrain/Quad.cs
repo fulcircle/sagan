@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Sagan.Terrain {
 
-    public class Quad : SaganObject {
+    public class Quad : SaganMesh {
 
         public float size { get; private set; }
         public bool isLeaf = false;
@@ -56,8 +56,8 @@ namespace Sagan.Terrain {
                     float z1 = z + this._stride;
 
                     // TODO: We're not sharing vertices, set triangles to share vertices
-                    Vector3 worldPoint0 = gameObject.transform.TransformPoint(x0, 0, z0);
-                    Vector3 worldPoint1 = gameObject.transform.TransformPoint(x1, 0, z1);
+                    Vector3 worldPoint0 = transform.TransformPoint(x0, 0, z0);
+                    Vector3 worldPoint1 = transform.TransformPoint(x1, 0, z1);
 
                     verts.Add(new Vector3(x1, GetHeight(worldPoint1.x, worldPoint0.z), z0)); // Shared vertex
                     verts.Add(new Vector3(x0, GetHeight(worldPoint0.x, worldPoint0.z), z0));
