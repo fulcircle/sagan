@@ -2,9 +2,17 @@ using UnityEngine;
 
 namespace Sagan.Framework {
 
-    public interface IEntity {
+    public interface ISaganObject {
 
         GameObject gameObject {
+            get;
+        }
+
+        MeshRenderer renderer {
+            get;
+        }
+
+        MeshFilter meshFilter {
             get;
         }
 
@@ -21,7 +29,16 @@ namespace Sagan.Framework {
         }
 
         bool active {
-            get; set;
+            set;
+            get;
+        }
+
+        Material material {
+            get;
+        }
+
+        Material[] materials {
+            get;
         }
 
     }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Sagan.Terrain {
 
-    public class Quad : Entity {
+    public class Quad : SaganObject {
 
         public float size { get; private set; }
         public bool isLeaf = false;
@@ -31,10 +31,6 @@ namespace Sagan.Terrain {
             this.LOD = LOD;
 
             this.error = error;
-
-            gameObject.AddComponent<MeshFilter>();
-            gameObject.AddComponent<MeshRenderer>();
-
         }
 
 
@@ -83,10 +79,9 @@ namespace Sagan.Terrain {
             mesh.vertices = verts.ToArray();
             mesh.triangles = tris.ToArray();
 
-            gameObject.GetComponent<MeshFilter>().mesh = mesh;
+            this.mesh = mesh;
 
             float diff = Time.time - start_time;
-            Debug.Log("ProceduralTerrain was generated in " + diff + " seconds!");
         }
 
         float GetHeight(float x_coor, float z_coor) {
