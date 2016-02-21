@@ -84,7 +84,7 @@ namespace Sagan.Terrain {
             float rho = (quad.error / distance ) * scalingFactor;
 
             // Largest allowable screen error
-            float tau = 200;
+            float tau = 120;
 
             if (quad.isLeaf || rho <= tau) {
                 quad.active = true;
