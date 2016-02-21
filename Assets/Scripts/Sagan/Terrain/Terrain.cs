@@ -1,7 +1,7 @@
 using Sagan.Framework;
 using System.Collections.Generic;
 using UnityEngine;
-using Camera = UnityEngine.Camera;
+using Camera = Sagan.Framework.Camera;
 
 namespace Sagan.Terrain {
 
@@ -27,7 +27,7 @@ namespace Sagan.Terrain {
             foreach (Quad q in _quads) {
                 q.active = false;
             }
-            this.chunkedLOD(rootQuad);
+            this.chunkedLOD(rootQuad, cam.perspectiveScalingFactor);
         }
 
         void GenerateQuadTree(Quad parentQuad) {
@@ -84,7 +84,7 @@ namespace Sagan.Terrain {
             float rho = (quad.error / distance ) * scalingFactor;
 
             // Largest allowable screen error
-            float tau = 0.4f;
+            float tau = 200;
 
             if (quad.isLeaf || rho <= tau) {
                 quad.active = true;

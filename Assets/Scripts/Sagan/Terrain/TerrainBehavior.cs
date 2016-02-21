@@ -1,5 +1,4 @@
 using UnityEngine;
-using Camera = Sagan.Framework.Camera;
 
 namespace Sagan.Terrain.Behavior {
 
@@ -8,7 +7,8 @@ namespace Sagan.Terrain.Behavior {
         private Sagan.Terrain.Terrain terrain;
 
         void Start() {
-            terrain = new Sagan.Terrain.Terrain(10, 6, Camera.mainCamera);
+            var cam = new Sagan.Framework.Camera(UnityEngine.Camera.main);
+            terrain = new Sagan.Terrain.Terrain(10, 6, cam);
         }
 
         void Update() {

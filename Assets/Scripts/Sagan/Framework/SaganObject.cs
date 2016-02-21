@@ -6,7 +6,7 @@ namespace Sagan.Framework {
 
         public GameObject gameObject {
             get;
-            private set;
+            protected set;
         }
 
 
