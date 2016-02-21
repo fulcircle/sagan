@@ -1,7 +1,7 @@
 using Sagan.Framework;
 using System.Collections.Generic;
 using UnityEngine;
-using Camera = Sagan.Framework.Camera;
+using Camera = UnityEngine.Camera;
 
 namespace Sagan.Terrain {
 
@@ -11,12 +11,15 @@ namespace Sagan.Terrain {
 
         private Quad rootQuad;
         private int levels;
+        private Camera cam;
 
-        public Terrain(int terrainSize, int levels) {
+        public Terrain(int terrainSize, int levels, Camera cam) {
             this.levels = levels;
 
-            rootQuad = new Quad(1, 10, 10);
-            GenerateQuadTree(rootQuad);
+            this.rootQuad = new Quad(1, 10, 10);
+            this.GenerateQuadTree(rootQuad);
+
+            this.cam = cam;
 
         }
 
@@ -72,7 +75,7 @@ namespace Sagan.Terrain {
 
             // TODO: Get closest point from camera, not origin
             quad.mesh.RecalculateBounds();
-            var camPos = Camera.mainCamera.transform.position;
+            var camPos = this.cam.transform.position;
             Vector3 closestPoint = quad.boundingBox.ClosestPoint(camPos);
             float distance = Vector3.Distance(closestPoint, camPos);
 
