@@ -2,17 +2,17 @@ using UnityEngine;
 
 namespace Sagan.Terrain.Behavior {
 
-    public class TerrainBehavior : MonoBehaviour {
+    public class SaganBehavior : MonoBehaviour {
 
-        private Sagan.Terrain.Terrain terrain;
+        private Sagan.Planet.Planet planet;
 
         void Start() {
             var cam = new Sagan.Framework.Camera(UnityEngine.Camera.main);
-            terrain = new Sagan.Terrain.Terrain(10, 6, cam, this.gameObject);
+            planet = new Sagan.Planet.Planet(cam, 10.0f);
         }
 
         void Update() {
-            terrain.Update();
+//            planet.Update();
         }
     }
 }

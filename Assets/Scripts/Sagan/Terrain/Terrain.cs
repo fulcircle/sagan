@@ -5,7 +5,7 @@ using Camera = Sagan.Framework.Camera;
 
 namespace Sagan.Terrain {
 
-    public class Terrain {
+    public class Terrain : SaganObject {
 
         private List<Quad> _quads = new List<Quad>();
 
@@ -23,16 +23,13 @@ namespace Sagan.Terrain {
             private set;
         }
 
-        public Terrain(int terrainSize, int levels, Camera cam, GameObject parent) {
+        public Terrain(int terrainSize, int levels, Camera cam) : base(name: "SaganTerrain") {
             this.levels = levels;
 
             // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
             this.heightMap = new HeightMap(terrainSize + 1);
 
-            this._parent = parent;
-
-            this.rootQuad = new Quad(1, 10, 10, this.heightMap);
-
+            this.rootQuad = new Quad(1, terrainSize, terrainSize, this.heightMap);
 
             this.cam = cam;
 
@@ -52,7 +49,7 @@ namespace Sagan.Terrain {
 
         void GenerateQuadTree(Quad parentQuad) {
 
-            parentQuad.transform.parent = this._parent.transform;
+            this.AddChild(parentQuad);
 
             parentQuad.Generate();
 
