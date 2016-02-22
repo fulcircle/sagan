@@ -49,8 +49,8 @@ namespace Sagan.Planet {
 
             // Face 1
             this.AddFace("Face 1",
-                         new Vector3(-this._terrainSize * 0.5f, this._terrainSize * 0.5f, this._terrainSize * 0.5f),
-                         new Vector3(90, 0, 0));
+                        new Vector3(-this._terrainSize * 0.5f, this._terrainSize * 0.5f, this._terrainSize * 0.5f),
+                        new Vector3(90, 0, 0));
 
             // Face 2
             this.AddFace("Face 2",
@@ -68,9 +68,11 @@ namespace Sagan.Planet {
                     new Vector3(0, 90, 0));
 
             // Face 5
-            this.AddFace("Face 4",
+            this.AddFace("Face 5",
                     new Vector3(this._terrainSize * 0.5f, -this._terrainSize * 0.5f, -this._terrainSize * 0.5f),
                     new Vector3(0, 0, 180));
+
+            var face1 = this._faces[0];
 
         }
         
