@@ -33,11 +33,7 @@ namespace Sagan.Terrain {
 
             this.cam = cam;
 
-            this.GenerateQuadTree(rootQuad);
-
-
-
-
+            this.Generate();
         }
 
         public void Update() {
@@ -47,11 +43,15 @@ namespace Sagan.Terrain {
             this.ChunkedLOD(rootQuad, cam.perspectiveScalingFactor);
         }
 
+        public void Generate() {
+            this.GenerateQuadTree(this.rootQuad);
+        }
+
         void GenerateQuadTree(Quad parentQuad) {
 
             this.AddChild(parentQuad);
 
-            parentQuad.Generate();
+            parentQuad.Generate(this.rootQuad.boundingBox);
 
             this._quads.Add(parentQuad);
 

@@ -7,7 +7,7 @@ namespace Sagan.Planet {
 
     public class Planet : SaganMesh {
 
-        private Sagan.Terrain.Terrain[] _faces;
+        private Sagan.Terrain.Terrain[] _faces = new Sagan.Terrain.Terrain[6];
         private Sagan.Framework.Camera _camera;
 
         public float radius {
@@ -46,6 +46,7 @@ namespace Sagan.Planet {
             var rot = new Vector3(-90, 0, 0);
             face.transform.localEulerAngles = rot;
             face.transform.localPosition = new Vector3(-terrain_size * 0.5f, -terrain_size * 0.5f, -terrain_size * 0.5f);
+            this._faces[0] = face;
 
             // Face 1
             face = new Sagan.Terrain.Terrain(terrain_size, this.levels, this._camera);
@@ -54,6 +55,7 @@ namespace Sagan.Planet {
             rot = new Vector3(90, 0, 0);
             face.transform.localEulerAngles = rot;
             face.transform.localPosition = new Vector3(-terrain_size * 0.5f, terrain_size * 0.5f, terrain_size * 0.5f);
+            this._faces[1] = face;
 
             // Face 2
             face = new Sagan.Terrain.Terrain(terrain_size, this.levels, this._camera);
@@ -62,6 +64,7 @@ namespace Sagan.Planet {
             rot = new Vector3(0, 0, 90);
             face.transform.localEulerAngles = rot;
             face.transform.localPosition = new Vector3(-terrain_size * 0.5f, -terrain_size * 0.5f, -terrain_size * 0.5f);
+            this._faces[2] = face;
 
             // Face 3
             face = new Sagan.Terrain.Terrain(terrain_size, this.levels, this._camera);
@@ -70,6 +73,7 @@ namespace Sagan.Planet {
             rot = new Vector3(0, 0, -90);
             face.transform.localEulerAngles = rot;
             face.transform.localPosition = new Vector3(terrain_size * 0.5f, terrain_size * 0.5f, -terrain_size * 0.5f);
+            this._faces[3] = face;
 
             // Face 4
             face = new Sagan.Terrain.Terrain(terrain_size, this.levels, this._camera);
@@ -78,15 +82,24 @@ namespace Sagan.Planet {
             rot = new Vector3(0, 90, 0);
             face.transform.localEulerAngles = rot;
             face.transform.localPosition = new Vector3(-terrain_size * 0.5f, terrain_size * 0.5f, terrain_size * 0.5f);
+            this._faces[4] = face;
 
             // Face 5
             face = new Sagan.Terrain.Terrain(terrain_size, this.levels, this._camera);
-            face.gameObject.name = "Face 4";
+            face.gameObject.name = "Face 5";
             this.AddChild(face);
             rot = new Vector3(0, 0, 180);
             face.transform.localEulerAngles = rot;
             face.transform.localPosition = new Vector3(terrain_size * 0.5f, -terrain_size * 0.5f, -terrain_size * 0.5f);
+            this._faces[5] = face;
 
         }
+
+        public void Update() {
+            foreach (var face in this._faces) {
+                face.Update();
+            }
+        }
     }
+
 }

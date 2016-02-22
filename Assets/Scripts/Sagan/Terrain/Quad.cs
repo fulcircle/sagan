@@ -37,7 +37,7 @@ namespace Sagan.Terrain {
         }
 
 
-        public void Generate() {
+        public void Generate(Bounds boundingBox) {
             float start_time = Time.time;
 
             List<Vector3> verts = new List<Vector3>();
@@ -46,9 +46,16 @@ namespace Sagan.Terrain {
 
             Mesh mesh = new Mesh();
 
+            var radius = 7;
+            // Get the local center of the rootquad
+            var center = this.transform.InverseTransformVector(boundingBox.center);
+            // Push the center down by radius to simulate center of the planet
+            center.y = -radius;
+
             int offset = 0;
             for (float x = 0; x <= size - this._stride; x = x + this._stride) {
                 for (float z = 0; z <= size - this._stride; z = z + this._stride) {
+
 
                     //Create two triangles that will generate a square
 
@@ -67,14 +74,26 @@ namespace Sagan.Terrain {
                     float xh1 = x1 + offsetx;
                     float zh1 = z1 + offsetz;
 
-                    // TODO: We're not sharing vertices, set triangles to share vertices
-                    verts.Add(new Vector3(x1, GetHeight(xh1, zh0), z0)); // Shared vertex
-                    verts.Add(new Vector3(x0, GetHeight(xh0, zh0), z0));
-                    verts.Add(new Vector3(x0, GetHeight(xh0, zh1), z1)); // Shared vertex
+                    // Point on the larger terrain
+                    var terrainPoint0 = new Vector3(xh0, this.transform.position.y, zh0);
+                    var terrainPoint1 = new Vector3(xh0, this.transform.position.y, zh1);
+                    var terrainPoint2 = new Vector3(xh1, this.transform.position.y, zh0);
+                    var terrainPoint3 = new Vector3(xh1, this.transform.position.y, zh1);
 
-                    verts.Add(new Vector3(x1, GetHeight(xh1, zh0), z0));
-                    verts.Add(new Vector3(x0, GetHeight(xh0, zh1), z1));
-                    verts.Add(new Vector3(x1, GetHeight(xh1, zh1), z1));
+                    var actual0 = ((terrainPoint0 - center).normalized * radius);
+                    var actual1 = ((terrainPoint1 - center).normalized * radius);
+                    var actual2 = ((terrainPoint2 - center).normalized * radius);
+                    var actual3 = ((terrainPoint3 - center).normalized * radius);
+
+
+                    // TODO: We're not sharing vertices, set triangles to share vertices
+                    verts.Add(new Vector3(x1, actual2.y + GetHeight(xh1, zh0), z0)); // Shared vertex
+                    verts.Add(new Vector3(x0, actual0.y + GetHeight(xh0, zh0), z0));
+                    verts.Add(new Vector3(x0, actual1.y + GetHeight(xh0, zh1), z1)); // Shared vertex
+
+                    verts.Add(new Vector3(x1, actual2.y + GetHeight(xh1, zh0), z0));
+                    verts.Add(new Vector3(x0, actual1.y + GetHeight(xh0, zh1), z1));
+                    verts.Add(new Vector3(x1, actual3.y + GetHeight(xh1, zh1), z1));
 
                     // Add first triangle
                     tris.AddRange(new int[] {offset, offset + 1, offset + 2});
@@ -94,6 +113,7 @@ namespace Sagan.Terrain {
         }
 
         float GetHeight(float x, float z) {
+            return 0;
             return this._heightMap.GetHeight(x, z);
         }
     }
