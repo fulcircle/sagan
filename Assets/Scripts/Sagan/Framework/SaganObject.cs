@@ -26,7 +26,7 @@ namespace Sagan.Framework {
             }
         }
 
-        private List<SaganObject> _children = new List<SaganObject>();
+        protected List<SaganObject> _children = new List<SaganObject>();
 
         public SaganObject(GameObject gameObject = null, string name = "SaganObject") {
             if (gameObject == null) {

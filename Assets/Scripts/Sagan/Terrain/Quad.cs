@@ -47,7 +47,7 @@ namespace Sagan.Terrain {
         }
 
 
-        public void Generate() {
+        public void PreCalculate() {
             float start_time = Time.time;
 
             this.verts = new List<Vector3>();
@@ -92,7 +92,11 @@ namespace Sagan.Terrain {
             float diff = Time.time - start_time;
         }
 
-        public void UpdateMesh() {
+        /// <summary>
+        /// Creates the mesh with the calculated vertices.
+        /// Assumes Calculate() was already called.
+        /// </summary>
+        public void Create() {
             var mesh = new Mesh();
             mesh.vertices = this.verts.ToArray();
             mesh.triangles = this.tris.ToArray();

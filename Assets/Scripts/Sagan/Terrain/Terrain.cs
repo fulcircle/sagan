@@ -7,8 +7,6 @@ namespace Sagan.Terrain {
 
     public class Terrain : SaganObject {
 
-        private List<Quad> _quads = new List<Quad>();
-
         private GameObject _parent;
 
         public Quad rootQuad {
@@ -36,26 +34,27 @@ namespace Sagan.Terrain {
         }
 
         public void Update() {
-            foreach (Quad q in _quads) {
+            foreach (Quad q in this._children) {
                 q.active = false;
             }
             this.ChunkedLOD(rootQuad, cam.perspectiveScalingFactor);
         }
 
-        public void Generate() {
+        public void PrecalculateQuads() {
             this.GenerateQuadTree(this.rootQuad);
+        }
+
+        public void CreateQuads() {
+            foreach(Quad q in this._children) {
+                q.Create();
+            }
         }
 
         void GenerateQuadTree(Quad parentQuad) {
 
             this.AddChild(parentQuad);
 
-            parentQuad.Generate();
-//            this.Spherify(parentQuad);
-            parentQuad.UpdateMesh();
-
-
-            this._quads.Add(parentQuad);
+            parentQuad.PreCalculate();
 
             if (parentQuad.LOD == this.levels) {
                 parentQuad.isLeaf = true;
@@ -92,13 +91,30 @@ namespace Sagan.Terrain {
             }
         }
 
-        void Spherify(Quad quad) {
-            var center = this.rootQuad.boundingBox.center;
-            for (int i = 0; i < quad.verts.Count; i++) {
-                var vert = quad.verts[i];
-                var worldVert = quad.transform.TransformVector(vert);
-                worldVert = worldVert.normalized;
-                quad.verts[i] = quad.transform.InverseTransformVector(worldVert);
+        /// <summary>
+        /// Spherify all Quads with given radius.
+        /// This method assumes the vertices were already precalculated this Terrain via preCalculateVertices()
+        /// </summary>
+        /// <param name="radius">Radius of the sphere</param>
+        public void Spherify(float radius) {
+
+            // Create the rootQuad mesh so we can get it's bounding box
+            this.rootQuad.Create();
+            // Get the center of the rootQuad, this is essentially the center of the entire terrain square
+            var center = this.rootQuad.localBoundingBox.center;
+
+            // Set the center point to a length of radius below the rootQuad that will simulate the center of the planet sphere
+            center.y = -radius;
+
+            foreach (Quad quad in this._children) {
+                for (int i = 0; i < quad.verts.Count; i++) {
+                    // Get the quad's vertex relative to the parent terrain
+                    var vert = quad.verts[i] + quad.transform.localPosition;
+                    // Convert the vector to a unit from our simulated sphere center and then re-add the radius to spherify
+                    var spherizedVert = (vert - center).normalized * radius;
+                    // Remove the parent vertex transform to get back the local coordinate again so it can be rendered
+                    quad.verts[i] = spherizedVert - quad.transform.localPosition;
+                }
             }
         }
 
@@ -107,8 +123,6 @@ namespace Sagan.Terrain {
         // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
         void ChunkedLOD(Quad quad, float scalingFactor=1.0f) {
 
-            // TODO: Get closest point from camera, not origin
-            quad.mesh.RecalculateBounds();
             var camPos = this.cam.transform.position;
             Vector3 closestPoint = quad.boundingBox.ClosestPoint(camPos);
             float distance = Vector3.Distance(closestPoint, camPos);

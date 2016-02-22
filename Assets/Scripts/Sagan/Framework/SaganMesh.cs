@@ -23,6 +23,8 @@ namespace Sagan.Framework {
 
             set {
                 meshFilter.mesh = value;
+                meshFilter.mesh.RecalculateBounds();
+                meshFilter.mesh.RecalculateNormals();
             }
         }
 
@@ -32,6 +34,15 @@ namespace Sagan.Framework {
         public Bounds boundingBox {
             get {
                 return renderer.bounds;
+            }
+        }
+
+        /// <summary>
+        /// Returns the Axis-Aligned Bounding Box in local space
+        /// </summary>
+        public Bounds localBoundingBox {
+            get {
+                return mesh.bounds;
             }
         }
 
