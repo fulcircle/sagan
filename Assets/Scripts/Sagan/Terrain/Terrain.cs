@@ -110,9 +110,10 @@ namespace Sagan.Terrain {
                 for (int i = 0; i < quad.verts.Count; i++) {
                     // Get the quad's vertex relative to the parent terrain
                     var vert = quad.verts[i] + quad.transform.localPosition;
-                    // Convert the vector to a unit from our simulated sphere center and then re-add the radius to spherify
+                    // Convert the vector to a unit from our simulated sphere center and then multiply by radius to spherify
+                    // See: http://ducttapeeinstein.com/mapping-a-cube-to-sphere-in-c-unity-3d-the-start-of-procedural-planet-generation/
                     var spherizedVert = (vert - center).normalized * radius;
-                    // Remove the parent vertex transform to get back the local coordinate again so it can be rendered
+                    // Remove the parent vertex transform to get back the local coordinate again
                     quad.verts[i] = spherizedVert - quad.transform.localPosition;
                 }
             }
