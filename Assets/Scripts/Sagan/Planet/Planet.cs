@@ -47,30 +47,30 @@ namespace Sagan.Planet {
                         new Vector3(-this._terrainSize * 0.5f, -this._terrainSize * 0.5f, -this._terrainSize * 0.5f),
                         new Vector3(-90, 0, 0));
 
-            // Face 1
-            this.AddFace("Face 1",
-                        new Vector3(-this._terrainSize * 0.5f, this._terrainSize * 0.5f, this._terrainSize * 0.5f),
-                        new Vector3(90, 0, 0));
-
-            // Face 2
-            this.AddFace("Face 2",
-                    new Vector3(-this._terrainSize * 0.5f, -this._terrainSize * 0.5f, -this._terrainSize * 0.5f),
-                    new Vector3(0, 0, 90));
-
-            // Face 3
-            this.AddFace("Face 3",
-                    new Vector3(this._terrainSize * 0.5f, this._terrainSize * 0.5f, -this._terrainSize * 0.5f),
-                    new Vector3(0, 0, -90));
-
-            // Face 4
-            this.AddFace("Face 4",
-                    new Vector3(-this._terrainSize * 0.5f, this._terrainSize * 0.5f, this._terrainSize * 0.5f),
-                    new Vector3(0, 90, 0));
-
-            // Face 5
-            this.AddFace("Face 5",
-                    new Vector3(this._terrainSize * 0.5f, -this._terrainSize * 0.5f, -this._terrainSize * 0.5f),
-                    new Vector3(0, 0, 180));
+//            // Face 1
+//            this.AddFace("Face 1",
+//                        new Vector3(-this._terrainSize * 0.5f, this._terrainSize * 0.5f, this._terrainSize * 0.5f),
+//                        new Vector3(90, 0, 0));
+//
+//            // Face 2
+//            this.AddFace("Face 2",
+//                    new Vector3(-this._terrainSize * 0.5f, -this._terrainSize * 0.5f, -this._terrainSize * 0.5f),
+//                    new Vector3(0, 0, 90));
+//
+//            // Face 3
+//            this.AddFace("Face 3",
+//                    new Vector3(this._terrainSize * 0.5f, this._terrainSize * 0.5f, -this._terrainSize * 0.5f),
+//                    new Vector3(0, 0, -90));
+//
+//            // Face 4
+//            this.AddFace("Face 4",
+//                    new Vector3(-this._terrainSize * 0.5f, this._terrainSize * 0.5f, this._terrainSize * 0.5f),
+//                    new Vector3(0, 90, 0));
+//
+//            // Face 5
+//            this.AddFace("Face 5",
+//                    new Vector3(this._terrainSize * 0.5f, -this._terrainSize * 0.5f, -this._terrainSize * 0.5f),
+//                    new Vector3(0, 0, 180));
 
             var face1 = this._faces[0];
 
@@ -80,6 +80,7 @@ namespace Sagan.Planet {
             var face = new Sagan.Terrain.Terrain(this._terrainSize, this.levels, this._camera);
             face.gameObject.name = name;
             this.AddChild(face);
+            face.Generate();
             face.transform.localEulerAngles = rotation;
             face.transform.localPosition = position;
             this._faces.Add(face);

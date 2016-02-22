@@ -30,7 +30,6 @@ namespace Sagan.Terrain {
 
         public float GetHeight(float x, float y) {
 
-
             // Interpolate the height value for x,y on the heightmap using bilinear interpolation
             // See: http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
 
@@ -74,7 +73,6 @@ namespace Sagan.Terrain {
         }
 
         private float HeightMapFunc(int x, int y) {
-            return 0;
             // Sin curve with some noise with a random number
             return 2.0f * Mathf.Sin(0.5f * x) + 3.0f * Mathf.Sin(0.5f * y) + Random.Range(0.0f, 2.0f);
         }

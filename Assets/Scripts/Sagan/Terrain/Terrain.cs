@@ -33,7 +33,6 @@ namespace Sagan.Terrain {
 
             this.cam = cam;
 
-            this.GenerateQuadTree(rootQuad);
         }
 
         public void Update() {
@@ -43,11 +42,18 @@ namespace Sagan.Terrain {
             this.ChunkedLOD(rootQuad, cam.perspectiveScalingFactor);
         }
 
+        public void Generate() {
+            this.GenerateQuadTree(this.rootQuad);
+        }
+
         void GenerateQuadTree(Quad parentQuad) {
 
             this.AddChild(parentQuad);
 
             parentQuad.Generate();
+//            this.Spherify(parentQuad);
+            parentQuad.UpdateMesh();
+
 
             this._quads.Add(parentQuad);
 
@@ -58,9 +64,9 @@ namespace Sagan.Terrain {
 
             parentQuad.isLeaf = false;
 
-            var currX = parentQuad.transform.position.x;
-            var currY = parentQuad.transform.position.y;
-            var currZ = parentQuad.transform.position.z;
+            var currX = parentQuad.transform.localPosition.x;
+            var currY = parentQuad.transform.localPosition.y;
+            var currZ = parentQuad.transform.localPosition.z;
 
             var stride = parentQuad.size * 0.5f;
 
@@ -72,17 +78,27 @@ namespace Sagan.Terrain {
 
                 parentQuad.children.Add(childQuad);
 
-                childQuad.transform.position = new Vector3(currX, currY, currZ);
+                childQuad.transform.localPosition = new Vector3(currX, currY, currZ);
 
-                GenerateQuadTree(childQuad);
+                this.GenerateQuadTree(childQuad);
 
                 currX = currX + stride;
-                if ((currX - parentQuad.transform.position.x) >= parentQuad.size) {
-                    currX = parentQuad.transform.position.x;
+                if ((currX - parentQuad.transform.localPosition.x) >= parentQuad.size) {
+                    currX = parentQuad.transform.localPosition.x;
                     currZ = currZ + stride;
                 }
 
 
+            }
+        }
+
+        void Spherify(Quad quad) {
+            var center = this.rootQuad.boundingBox.center;
+            for (int i = 0; i < quad.verts.Count; i++) {
+                var vert = quad.verts[i];
+                var worldVert = quad.transform.TransformVector(vert);
+                worldVert = worldVert.normalized;
+                quad.verts[i] = quad.transform.InverseTransformVector(worldVert);
             }
         }
 
