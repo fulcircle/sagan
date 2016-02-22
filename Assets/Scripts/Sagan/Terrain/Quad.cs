@@ -46,7 +46,7 @@ namespace Sagan.Terrain {
 
             Mesh mesh = new Mesh();
 
-            var radius = 7;
+            var radius = 10;
             // Get the local center of the rootquad
             var center = this.transform.InverseTransformVector(boundingBox.center);
             // Push the center down by radius to simulate center of the planet
@@ -80,10 +80,10 @@ namespace Sagan.Terrain {
                     var terrainPoint2 = new Vector3(xh1, this.transform.position.y, zh0);
                     var terrainPoint3 = new Vector3(xh1, this.transform.position.y, zh1);
 
-                    var actual0 = ((terrainPoint0 - center).normalized * radius);
-                    var actual1 = ((terrainPoint1 - center).normalized * radius);
-                    var actual2 = ((terrainPoint2 - center).normalized * radius);
-                    var actual3 = ((terrainPoint3 - center).normalized * radius);
+                    var actual0 = ((terrainPoint0 - center).normalized);
+                    var actual1 = ((terrainPoint1 - center).normalized);
+                    var actual2 = ((terrainPoint2 - center).normalized);
+                    var actual3 = ((terrainPoint3 - center).normalized);
 
 
                     // TODO: We're not sharing vertices, set triangles to share vertices
