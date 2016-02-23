@@ -74,7 +74,7 @@ namespace Sagan.Terrain {
 
         private float HeightMapFunc(int x, int y) {
             // Sin curve with some noise with a random number
-            return 2.0f * Mathf.Sin(0.5f * x) + 3.0f * Mathf.Sin(0.5f * y) + Random.Range(0.0f, 2.0f);
+            return Random.Range(0.0f, 0.3f);
         }
     }
 }

@@ -104,7 +104,6 @@ namespace Sagan.Terrain {
         }
 
         float GetHeight(float x, float z) {
-            return 0;
             return this._heightMap.GetHeight(x, z);
         }
     }

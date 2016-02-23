@@ -8,11 +8,11 @@ namespace Sagan.Terrain.Behavior {
 
         void Start() {
             var cam = new Sagan.Framework.Camera(UnityEngine.Camera.main);
-            planet = new Sagan.Planet.Planet(cam, 10.0f, 3);
+            planet = new Sagan.Planet.Planet(cam, 10, 6);
         }
 
         void Update() {
-//            planet.Update();
+            planet.Update();
         }
     }
 }
