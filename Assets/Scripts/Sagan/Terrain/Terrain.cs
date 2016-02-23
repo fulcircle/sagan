@@ -31,11 +31,6 @@ namespace Sagan.Terrain {
 
             this.cam = cam;
 
-            this.GenerateQuadTree(rootQuad);
-
-
-
-
         }
 
         public void Update() {
