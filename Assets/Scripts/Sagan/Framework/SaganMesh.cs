@@ -23,6 +23,8 @@ namespace Sagan.Framework {
 
             set {
                 meshFilter.mesh = value;
+                meshFilter.mesh.RecalculateBounds();
+                meshFilter.mesh.RecalculateNormals();
             }
         }
 
@@ -32,6 +34,15 @@ namespace Sagan.Framework {
         public Bounds boundingBox {
             get {
                 return renderer.bounds;
+            }
+        }
+
+        /// <summary>
+        /// Returns the Axis-Aligned Bounding Box in local space
+        /// </summary>
+        public Bounds localBoundingBox {
+            get {
+                return mesh.bounds;
             }
         }
 
@@ -47,10 +58,25 @@ namespace Sagan.Framework {
             }
         }
 
+        public bool visible {
+            get {
+                return renderer.enabled;
+            }
 
-        public SaganMesh(string name) : base(name) {
-            gameObject.AddComponent<MeshFilter>();
-            gameObject.AddComponent<MeshRenderer>();
+            set {
+                renderer.enabled = value;
+            }
+        }
+
+
+        public SaganMesh(GameObject gameObject = null, string name = "SaganMesh") : base(gameObject, name) {
+            if (this.gameObject.GetComponent<MeshFilter>() == null) {
+                this.gameObject.AddComponent<MeshFilter>();
+            }
+
+            if (this.gameObject.GetComponentInChildren<MeshRenderer>() == null) {
+                this.gameObject.AddComponent<MeshRenderer>();
+            }
         }
 
     }

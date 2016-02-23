@@ -30,10 +30,10 @@ namespace Sagan.Terrain {
 
         public float GetHeight(float x, float y) {
 
-
             // Interpolate the height value for x,y on the heightmap using bilinear interpolation
             // See: http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
 
+            // Use x % 1.0 and (x % 1.0) + 1 instead of Floor/Ceil
             int x1 = (int)Mathf.Floor(x);
             int x2 = (int)Mathf.Ceil(x);
             int y1 = (int)Mathf.Floor(y);
@@ -46,12 +46,14 @@ namespace Sagan.Terrain {
             }
 
             // The four surrounding pixels to this pixel on the heightmap
+            // TODO: Replace with Mathf.lerp
             float q11 = this._heightMap[x1, y1];
             float q12 = this._heightMap[x1, y2];
             float q21 = this._heightMap[x2, y1];
             float q22 = this._heightMap[x2, y2];
 
             // The bilinear interpolation
+            // TODO: Replace with Mathf.lerp
             float r1, r2, height;
 
             if (x2 == x1) {
@@ -74,8 +76,8 @@ namespace Sagan.Terrain {
         }
 
         private float HeightMapFunc(int x, int y) {
-            // Sin curve with some noise with a random number
-            return 2.0f * Mathf.Sin(0.5f * x) + 3.0f * Mathf.Sin(0.5f * y) + Random.Range(0.0f, 2.0f);
+            var result = Mathf.PerlinNoise(x * 3.234f, y * 3.21234f) * 1.5f;
+            return result;
         }
     }
 }

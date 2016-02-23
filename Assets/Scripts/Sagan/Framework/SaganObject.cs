@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Sagan.Framework {
@@ -8,7 +9,6 @@ namespace Sagan.Framework {
             get;
             protected set;
         }
-
 
         public Transform transform {
             get {
@@ -26,8 +26,19 @@ namespace Sagan.Framework {
             }
         }
 
-        public SaganObject(string name) {
-            gameObject = new GameObject(name);
+        protected List<SaganObject> _children = new List<SaganObject>();
+
+        public SaganObject(GameObject gameObject = null, string name = "SaganObject") {
+            if (gameObject == null) {
+                this.gameObject = new GameObject(name);
+            } else {
+                this.gameObject = gameObject;
+            }
+        }
+
+        public void AddChild(SaganObject child) {
+            child.transform.parent = this.transform;
+            this._children.Add(child);
         }
 
     }

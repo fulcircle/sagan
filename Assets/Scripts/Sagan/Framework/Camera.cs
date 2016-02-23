@@ -34,7 +34,7 @@ namespace Sagan.Framework {
             }
         }
 
-        public Camera(UnityEngine.Camera camera) : base("Camera") {
+        public Camera(UnityEngine.Camera camera) : base(camera.gameObject) {
             this.camera = camera;
             this.gameObject = camera.gameObject;
             this.UpdateFOV();
