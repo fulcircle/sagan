@@ -115,12 +115,9 @@ namespace Sagan.Terrain {
                     vert.y = 0;
                     // Convert the vector to a unit from our simulated sphere center and then multiply by radius to spherify
                     // See: http://ducttapeeinstein.com/mapping-a-cube-to-sphere-in-c-unity-3d-the-start-of-procedural-planet-generation/
-                    var spherizedVert = (vert - center).normalized * radius;
+                    var spherizedVert = (vert - center).normalized * (radius + height);
                     // Remove the parent vertex transform to get back the local coordinate again
                     quad.verts[i] = (spherizedVert - quad.transform.localPosition);
-
-                    // Add back height component
-                    quad.verts[i] += new Vector3(0, height, 0);
                 }
             }
         }

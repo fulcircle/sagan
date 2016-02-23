@@ -32,9 +32,6 @@ namespace Sagan.Planet {
 
             this.levels = levels;
 
-
-            // Going to spherize the terrain cube, so we calculate size of cube face to get the radius we want
-
             this._terrainSize = 2 * this.radius;
 
             // Add a cube to center our local origin around the cube faces we will be adding
