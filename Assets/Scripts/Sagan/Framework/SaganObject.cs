@@ -34,6 +34,7 @@ namespace Sagan.Framework {
             } else {
                 this.gameObject = gameObject;
             }
+            this.gameObject.name = name;
         }
 
         public void AddChild(SaganObject child) {
