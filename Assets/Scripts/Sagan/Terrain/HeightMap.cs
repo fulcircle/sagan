@@ -7,6 +7,15 @@ namespace Sagan.Terrain {
     public class HeightMap {
 
         private float[,] _heightMap;
+        public float maxHeightValue {
+            get;
+            private set;
+        }
+
+        public float minHeightValue {
+            get;
+            private set;
+        }
 
         public int size {
             get;
@@ -15,6 +24,8 @@ namespace Sagan.Terrain {
 
         public HeightMap(int size) {
             this.size = size;
+            this.maxHeightValue = 0;
+            this.minHeightValue = 0;
             this.InitMap();
         }
 
@@ -23,7 +34,16 @@ namespace Sagan.Terrain {
 
             for (int a = 0; a < this._heightMap.GetLength(0); a++) {
                 for (int b = 0; b < this._heightMap.GetLength(1); b++) {
-                    this._heightMap[a, b] = this.HeightMapFunc(a, b);
+
+                    var height = this.HeightMapFunc(a, b);
+
+                    if (height > this.maxHeightValue) {
+                        this.maxHeightValue = height;
+                    } else if (height < minHeightValue) {
+                        this.minHeightValue = height;
+                    }
+
+                    this._heightMap[a, b] = height;
                 }
             }
         }

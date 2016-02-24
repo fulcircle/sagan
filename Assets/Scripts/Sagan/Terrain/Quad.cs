@@ -44,6 +44,12 @@ namespace Sagan.Terrain {
             this.error = error;
 
             this._heightMap = heightMap;
+
+            this.material = new Material(Shader.Find("Sagan/ColorHeight"));
+
+            this.material.SetFloat("_MaxHeight", this._heightMap.maxHeightValue);
+            this.material.SetFloat("_MinHeight", this._heightMap.minHeightValue);
+
         }
 
 
@@ -94,7 +100,7 @@ namespace Sagan.Terrain {
 
         /// <summary>
         /// Creates the mesh with the calculated vertices.
-        /// Assumes Calculate() was already called.
+        /// Assumes PreCalculate() was already called.
         /// </summary>
         public void Create() {
             var mesh = new Mesh();

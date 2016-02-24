@@ -50,6 +50,10 @@ namespace Sagan.Framework {
             get {
                 return renderer.material;
             }
+
+            set {
+                renderer.material = value;
+            }
         }
 
         public Material[] materials {
