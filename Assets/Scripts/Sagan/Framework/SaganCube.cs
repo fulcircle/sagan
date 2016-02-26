@@ -7,5 +7,6 @@ namespace Sagan.Framework {
         public SaganCube(string name="SaganCube") :
         base(GameObject.CreatePrimitive(PrimitiveType.Cube), name) {
         }
+
     }
 }

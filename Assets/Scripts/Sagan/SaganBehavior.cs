@@ -5,6 +5,7 @@ namespace Sagan.Terrain.Behavior {
     public class SaganBehavior : MonoBehaviour {
 
         private Sagan.Planet.Planet _planet;
+        private Sagan.Terrain.Terrain _terrain;
 
         private Sagan.Framework.Camera _cam;
 
@@ -12,14 +13,16 @@ namespace Sagan.Terrain.Behavior {
 
         public int radius = 10;
 
-
         void Start() {
             this._cam = new Sagan.Framework.Camera(UnityEngine.Camera.main);
-            this._planet = new Sagan.Planet.Planet(this._cam, this.radius, this.depth);
+            this._terrain = new Sagan.Terrain.Terrain(128, 6, this._cam);
+            this._terrain.Precalculate();
+            this._terrain.Create();
+            this._terrain.showQuadBoundingBox = true;
         }
 
         void Update() {
-            this._planet.Update();
+            this._terrain.Update();
         }
     }
 }

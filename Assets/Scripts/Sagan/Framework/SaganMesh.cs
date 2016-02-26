@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace Sagan.Framework {
@@ -23,8 +24,7 @@ namespace Sagan.Framework {
 
             set {
                 meshFilter.mesh = value;
-                meshFilter.mesh.RecalculateBounds();
-                meshFilter.mesh.RecalculateNormals();
+                this.RecalculateBounds();
             }
         }
 
@@ -72,6 +72,28 @@ namespace Sagan.Framework {
             }
         }
 
+        public bool boundingBoxVisible {
+            get {
+                if (this._boundingBoxCube != null) {
+                    return this._boundingBoxCube.visible;
+                }
+                else {
+                    return false;
+                }
+            }
+
+            set {
+                if (value) {
+                    this.AddBoundingBox();
+                }
+
+                this._boundingBoxCube.visible = value;
+            }
+
+        }
+
+
+        private SaganCube _boundingBoxCube;
 
         public SaganMesh(GameObject gameObject = null, string name = "SaganMesh") : base(gameObject, name) {
             if (this.gameObject.GetComponent<MeshFilter>() == null) {
@@ -81,6 +103,25 @@ namespace Sagan.Framework {
             if (this.gameObject.GetComponentInChildren<MeshRenderer>() == null) {
                 this.gameObject.AddComponent<MeshRenderer>();
             }
+        }
+
+        public void RecalculateBounds() {
+            meshFilter.mesh.RecalculateBounds();
+            meshFilter.mesh.RecalculateNormals();
+
+            if (this._boundingBoxCube != null) {
+                this._boundingBoxCube.transform.localPosition = this.localBoundingBox.min;
+                this._boundingBoxCube.transform.localScale = this.localBoundingBox.max;
+            }
+
+        }
+
+        protected void AddBoundingBox() {
+            if (this._boundingBoxCube != null) return;
+            this._boundingBoxCube = new SaganCube("BoundingBox");
+            this.AddChild(this._boundingBoxCube);
+            this._boundingBoxCube.transform.localPosition = this.localBoundingBox.min;
+            this._boundingBoxCube.transform.localScale = this.localBoundingBox.max;
         }
 
     }
