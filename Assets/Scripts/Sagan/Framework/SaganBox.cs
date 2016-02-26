@@ -2,9 +2,9 @@ using UnityEngine;
 
 namespace Sagan.Framework {
 
-    public class SaganCube : SaganMesh {
+    public class SaganBox : SaganMesh {
 
-        public SaganCube(string name="SaganCube") :
+        public SaganBox(string name="SaganBox") :
         base(GameObject.CreatePrimitive(PrimitiveType.Cube), name) {
         }
 

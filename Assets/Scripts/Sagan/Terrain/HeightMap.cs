@@ -39,7 +39,7 @@ namespace Sagan.Terrain {
 
                     if (height > this.maxHeightValue) {
                         this.maxHeightValue = height;
-                    } else if (height < minHeightValue) {
+                    } else if (height < this.minHeightValue) {
                         this.minHeightValue = height;
                     }
 
@@ -96,7 +96,6 @@ namespace Sagan.Terrain {
         }
 
         private float HeightMapFunc(int x, int y) {
-            return 0;
             var result = Mathf.PerlinNoise(x * 3.234f, y * 3.21234f) * 1.5f;
             return result;
         }

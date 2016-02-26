@@ -74,8 +74,8 @@ namespace Sagan.Framework {
 
         public bool boundingBoxVisible {
             get {
-                if (this._boundingBoxCube != null) {
-                    return this._boundingBoxCube.visible;
+                if (this._boundingBox != null) {
+                    return this._boundingBox.visible;
                 }
                 else {
                     return false;
@@ -87,13 +87,13 @@ namespace Sagan.Framework {
                     this.AddBoundingBox();
                 }
 
-                this._boundingBoxCube.visible = value;
+                this._boundingBox.visible = value;
             }
 
         }
 
 
-        private SaganCube _boundingBoxCube;
+        private SaganBox _boundingBox;
 
         public SaganMesh(GameObject gameObject = null, string name = "SaganMesh") : base(gameObject, name) {
             if (this.gameObject.GetComponent<MeshFilter>() == null) {
@@ -109,20 +109,18 @@ namespace Sagan.Framework {
             meshFilter.mesh.RecalculateBounds();
             meshFilter.mesh.RecalculateNormals();
 
-            if (this._boundingBoxCube != null) {
-                this._boundingBoxCube.transform.localPosition = this.localBoundingBox.min;
-                this._boundingBoxCube.transform.localScale = this.localBoundingBox.max;
+            if (this._boundingBox != null) {
+                this._boundingBox.transform.localPosition = this.localBoundingBox.center;
+                this._boundingBox.transform.localScale = this.localBoundingBox.max;
             }
 
         }
 
         protected void AddBoundingBox() {
-            if (this._boundingBoxCube != null) return;
-            this._boundingBoxCube = new SaganCube("BoundingBox");
-            this.AddChild(this._boundingBoxCube);
-            this._boundingBoxCube.transform.localPosition = this.localBoundingBox.min;
-            this._boundingBoxCube.transform.localScale = this.localBoundingBox.max;
+            if (this._boundingBox != null) { return; }
+            this._boundingBox = new SaganBox("BoundingBox");
+            this.AddChild(this._boundingBox);
+            this.RecalculateBounds();
         }
-
     }
 }

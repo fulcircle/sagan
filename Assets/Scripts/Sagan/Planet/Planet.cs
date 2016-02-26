@@ -9,7 +9,7 @@ namespace Sagan.Planet {
     public class Planet : SaganMesh {
 
         private Sagan.Framework.Camera _camera;
-        private Sagan.Framework.SaganCube _planetCube;
+        private Sagan.Framework.SaganBox _planetCube;
 
         private List<Sagan.Terrain.Terrain> _faces = new List<Sagan.Terrain.Terrain>();
 
@@ -35,7 +35,7 @@ namespace Sagan.Planet {
             this._terrainSize = 2 * this.radius;
 
             // Add a cube to center our local origin around the cube faces we will be adding
-            this._planetCube = new SaganCube("PlanetCube");
+            this._planetCube = new SaganBox("PlanetCube");
             this.AddChild(_planetCube);
             this._planetCube.transform.localScale = new Vector3(this._terrainSize, this._terrainSize, this._terrainSize);
             this._planetCube.visible = false;
