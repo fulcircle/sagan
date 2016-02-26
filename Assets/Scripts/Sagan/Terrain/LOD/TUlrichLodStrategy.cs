@@ -35,7 +35,7 @@ namespace Scripts.Sagan.Terrain
         public void Precalculate()
         {
             this.quads = new List<Quad>();
-            this.rootQuad = new Quad(1, this.terrainSize, this.terrainSize, this.heightMap);
+            this.rootQuad = new Quad(2, this.terrainSize, this.terrainSize * 0.5f, this.heightMap);
             this.GenerateQuadTree(this.rootQuad);
         }
 
@@ -46,7 +46,7 @@ namespace Scripts.Sagan.Terrain
 
             parentQuad.PreCalculate();
 
-            if (parentQuad.LOD == this.levels) {
+            if (parentQuad.LOD == this.levels + 1) {
                 parentQuad.isLeaf = true;
                 return;
             }
