@@ -91,8 +91,6 @@ namespace Sagan.Terrain {
             }
 
             return height;
-
-
         }
 
         private float HeightMapFunc(int x, int y) {

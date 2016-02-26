@@ -18,7 +18,6 @@ namespace Sagan.Terrain.Behavior {
             this._terrain = new Sagan.Terrain.Terrain(128, 2, this._cam);
             this._terrain.Precalculate();
             this._terrain.Create();
-            this._terrain.showQuadBoundingBox = true;
         }
 
         void Update() {

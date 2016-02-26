@@ -18,10 +18,8 @@ namespace Sagan.Terrain {
         public HeightMap heightMap { get; private set; }
 
         private bool _boundingBoxesVisible = false;
-
         public bool showQuadBoundingBox  {
             get { return this._boundingBoxesVisible; }
-
             set {
                 this._lodStrategy.quads.ForEach(q => q.boundingBoxVisible = value);
                 this._boundingBoxesVisible = value;
@@ -70,7 +68,7 @@ namespace Sagan.Terrain {
             // Set the center point to a length of radius below the rootQuad that will simulate the center of the planet sphere
             center.y = -radius;
 
-            foreach (Quad quad in this._children) {
+            foreach (Quad quad in this._lodStrategy.quads) {
                 for (int i = 0; i < quad.verts.Count; i++) {
                     // Get the quad's vertex relative to the parent terrain
                     var vert = quad.verts[i] + quad.transform.localPosition;

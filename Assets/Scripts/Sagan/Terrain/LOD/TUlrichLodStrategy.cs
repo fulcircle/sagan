@@ -41,6 +41,7 @@ namespace Scripts.Sagan.Terrain
 
         void GenerateQuadTree(Quad parentQuad) {
 
+
             this.quads.Add(parentQuad);
 
             parentQuad.PreCalculate();
