@@ -12,11 +12,11 @@ namespace Sagan.Terrain {
 
         public int LOD {
             get {
-                return _lod;
+                return _lod - 2;
             }
             private set {
                 this._lod = value + 2;
-                this._stride = this.size / (float)value;
+                this._stride = this.size / (float)this._lod;
             }
         }
 
