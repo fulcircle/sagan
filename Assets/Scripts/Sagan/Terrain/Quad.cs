@@ -15,7 +15,7 @@ namespace Sagan.Terrain {
                 return _lod;
             }
             private set {
-                this._lod = value;
+                this._lod = value + 2;
                 this._stride = this.size / (float)value;
             }
         }
