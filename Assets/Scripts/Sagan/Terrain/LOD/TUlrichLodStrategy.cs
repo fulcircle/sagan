@@ -63,7 +63,7 @@ namespace Scripts.Sagan.Terrain
             for (int i=0; i < 4; i++) {
                 var childQuad = new Quad(parentQuad.LOD + 1,
                         parentQuad.size * 0.5f,
-                        parentQuad.size * 0.5f,
+                        parentQuad.error * 0.5f,
                         this.heightMap);
 
                 parentQuad.children.Add(childQuad);

@@ -1,3 +1,4 @@
+using System;
 using Sagan.Framework;
 using System.Collections.Generic;
 using UnityEngine;
@@ -60,8 +61,9 @@ namespace Sagan.Terrain {
             this.tris = new List<int>();
 
             int offset = 0;
-            for (float x = 0; x <= size - this._stride; x = x + this._stride) {
-                for (float z = 0; z <= size - this._stride; z = z + this._stride) {
+            float stride = (float)Math.Round(this._stride, 4);
+            for (float x = 0; x <= size - stride; x = x + this._stride) {
+                for (float z = 0; z <= size - stride; z = z + this._stride) {
 
                     //Create two triangles that will generate a square
 
