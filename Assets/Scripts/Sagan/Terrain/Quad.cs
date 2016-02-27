@@ -11,16 +11,6 @@ namespace Sagan.Terrain {
         public bool isLeaf = false;
         public List<Quad> children = new List<Quad>();
 
-        public int LOD {
-            get {
-                return _lod - 2;
-            }
-            private set {
-                this._lod = value + 2;
-                this._stride = (float)Math.Round(this.size / (float)this._lod, 4);
-            }
-        }
-
         public float error {get; private set;}
 
         public List<Vector3> verts {
@@ -33,19 +23,28 @@ namespace Sagan.Terrain {
             private set;
         }
 
-        private int _lod;
-        private float _stride;
+        public float subdivisions { get; private set; }
+
+        private float _step;
+
+        public int LOD { get; private set; }
+
         private float _maxHeight = 20;
         private HeightMap _heightMap;
 
-        public Quad(int LOD, float size, float error, HeightMap heightMap) : base(name: "Quad") {
+        public Quad(int LOD, float size, float error, HeightMap heightMap, int subdivisions=12) : base(name: "Quad") {
             this.size = size;
+
             this.LOD = LOD;
 
             this.error = error;
 
             this._heightMap = heightMap;
 
+            this.subdivisions = subdivisions;
+
+            this._step = size / this.subdivisions;
+            
             this.material = new Material(Shader.Find("Sagan/ColorHeight"));
 
             this.material.SetFloat("_MaxHeight", this._heightMap.maxHeightValue);
@@ -61,16 +60,16 @@ namespace Sagan.Terrain {
             this.tris = new List<int>();
 
             int offset = 0;
-            for (float x = 0; x <= size - this._stride; x = x + this._stride) {
-                for (float z = 0; z <= size - this._stride; z = z + this._stride) {
+            for (float x = 0; x <= size - this._step; x = x + this._step) {
+                for (float z = 0; z <= size - this._step; z = z + this._step) {
 
                     //Create two triangles that will generate a square
 
                     float x0 = x;
-                    float x1 = x + this._stride;
+                    float x1 = x + this._step;
 
                     float z0 = z;
-                    float z1 = z + this._stride;
+                    float z1 = z + this._step;
 
                     // We want the height at the offset that this Quad is from it's parent (the Terrain object)
                     float xh0 = x0 + transform.localPosition.x;

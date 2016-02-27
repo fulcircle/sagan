@@ -15,7 +15,7 @@ namespace Sagan.Terrain.Behavior {
 
         void Start() {
             this._cam = new Sagan.Framework.Camera(UnityEngine.Camera.main);
-            this._terrain = new Sagan.Terrain.Terrain(128, 2, this._cam);
+            this._terrain = new Sagan.Terrain.Terrain(128, 6, this._cam);
             this._terrain.Precalculate();
             this._terrain.Create();
         }

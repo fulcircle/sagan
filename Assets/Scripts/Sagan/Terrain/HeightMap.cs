@@ -94,7 +94,7 @@ namespace Sagan.Terrain {
         }
 
         private float HeightMapFunc(int x, int y) {
-            var result = Mathf.PerlinNoise(x * 3.234f, y * 3.21234f) * 1.5f;
+            var result = Mathf.PerlinNoise(x * 3.234f, y * 3.21234f) * 5.5f;
             return result;
         }
     }
