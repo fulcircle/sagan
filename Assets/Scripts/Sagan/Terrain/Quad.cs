@@ -17,7 +17,7 @@ namespace Sagan.Terrain {
             }
             private set {
                 this._lod = value + 2;
-                this._stride = this.size / (float)this._lod;
+                this._stride = (float)Math.Round(this.size / (float)this._lod, 4);
             }
         }
 
@@ -61,9 +61,8 @@ namespace Sagan.Terrain {
             this.tris = new List<int>();
 
             int offset = 0;
-            float stride = (float)Math.Round(this._stride, 4);
-            for (float x = 0; x <= size - stride; x = x + this._stride) {
-                for (float z = 0; z <= size - stride; z = z + this._stride) {
+            for (float x = 0; x <= size - this._stride; x = x + this._stride) {
+                for (float z = 0; z <= size - this._stride; z = z + this._stride) {
 
                     //Create two triangles that will generate a square
 
