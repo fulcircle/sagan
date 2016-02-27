@@ -22,12 +22,12 @@ namespace Scripts.Sagan.Terrain
 
         public List<Quad> quads { get; private set; }
 
-        private readonly int levels;
+        private readonly int depth;
 
-        public TUlrichLodStrategy(int terrainSize, HeightMap heightMap, int levels)
+        public TUlrichLodStrategy(int terrainSize, HeightMap heightMap, int depth)
         {
             this.heightMap = heightMap;
-            this.levels = levels;
+            this.depth = depth;
             this.terrainSize = terrainSize;
         }
 
@@ -46,7 +46,8 @@ namespace Scripts.Sagan.Terrain
 
             parentQuad.PreCalculate();
 
-            if (parentQuad.LOD + 1 == this.levels) {
+            // Start at LOD = 0, so add 1 to check if we've went to the propert depth
+            if (parentQuad.LOD + 1 == this.depth) {
                 parentQuad.isLeaf = true;
                 return;
             }
