@@ -8,8 +8,12 @@ namespace Sagan.Terrain {
     public class Quad : SaganMesh {
 
         public float size { get; private set; }
+
         public bool isLeaf = false;
+
         public List<Quad> children = new List<Quad>();
+
+        public Quad parent;
 
         public float error {get; private set;}
 

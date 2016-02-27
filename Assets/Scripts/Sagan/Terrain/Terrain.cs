@@ -36,7 +36,7 @@ namespace Sagan.Terrain {
             this.cam = cam;
 
             if (lodStrategy == null) {
-                this._lodStrategy = new TUlrichLodStrategy(terrainSize, this.heightMap, this.levels);
+                this._lodStrategy = new ProlandLodStrategy(terrainSize, this.heightMap, this.levels);
             }
         }
 

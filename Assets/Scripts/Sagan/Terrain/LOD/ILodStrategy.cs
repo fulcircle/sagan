@@ -5,8 +5,7 @@ using JetBrains.Annotations;
 using Sagan.Terrain;
 using Camera = Sagan.Framework.Camera;
 
-public interface ILodStrategy
-{
+public interface ILodStrategy {
     List<Quad> quads { get; }
 
     void Precalculate();
