@@ -3,9 +3,9 @@ using Sagan.Terrain;
 using UnityEngine;
 using Camera = Sagan.Framework.Camera;
 
-namespace Scripts.Sagan.Terrain {
+namespace Sagan.Terrain {
     public class TUlrichLodStrategy : LodStrategy {
-        public TUlrichLodStrategy(int terrainSize, HeightMap heightMap, int depth) : base(terrainSize, heightMap, depth) {}
+        public TUlrichLodStrategy(Sagan.Terrain.Terrain terrain) : base(terrain) {}
 
         // TODO: Optimizations
         // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
@@ -29,7 +29,7 @@ namespace Scripts.Sagan.Terrain {
             }
         }
 
-        public void Spherify() {
+        public override void Spherify() {
             throw new NotImplementedException();
         }
     }

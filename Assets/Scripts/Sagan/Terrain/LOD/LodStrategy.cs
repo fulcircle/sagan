@@ -7,24 +7,18 @@ using Camera = Sagan.Framework.Camera;
 public abstract class LodStrategy : ILodStrategy {
     public Quad rootQuad { get; private set; }
 
-    public int terrainSize { get; private set; }
-
-    public HeightMap heightMap { get; private set; }
-
     public List<Quad> quads { get; private set; }
 
-    public readonly int depth;
+    public Sagan.Terrain.Terrain terrain;
 
-    public LodStrategy(int terrainSize, HeightMap heightMap, int depth) {
-        this.heightMap = heightMap;
-        this.depth = depth;
-        this.terrainSize = terrainSize;
+    public LodStrategy(Sagan.Terrain.Terrain terrain) {
+        this.terrain = terrain;
     }
 
 
     public void Precalculate() {
         quads = new List<Quad>();
-        rootQuad = new Quad(0, terrainSize, terrainSize*0.5f, heightMap);
+        rootQuad = new Quad(0, this.terrain.terrainSize, this.terrain.terrainSize*0.5f, this.terrain.heightMap);
         GenerateQuadTree(rootQuad);
     }
 
@@ -34,7 +28,7 @@ public abstract class LodStrategy : ILodStrategy {
         parentQuad.PreCalculate();
 
         // Start at LOD = 0, so add 1 to check if we've went to the propert depth
-        if (parentQuad.LOD + 1 == depth) {
+        if (parentQuad.LOD + 1 == this.terrain.depth) {
             parentQuad.isLeaf = true;
             return;
         }
@@ -51,7 +45,7 @@ public abstract class LodStrategy : ILodStrategy {
             var childQuad = new Quad(parentQuad.LOD + 1,
                 parentQuad.size*0.5f,
                 parentQuad.error*0.5f,
-                heightMap);
+                this.terrain.heightMap);
 
             parentQuad.children.Add(childQuad);
             childQuad.parent = parentQuad;
@@ -70,9 +64,7 @@ public abstract class LodStrategy : ILodStrategy {
 
     protected abstract void Render(Camera cam, Quad quad, float scalingFactor = 1.0f);
 
-    public void Spherify() {
-        throw new NotImplementedException();
-    }
+    public abstract void Spherify(); 
 
     public void Create() {
         quads.ForEach(q => q.Create());

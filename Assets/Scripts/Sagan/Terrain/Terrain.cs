@@ -1,23 +1,22 @@
 using Sagan.Framework;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Scripts.Sagan.Terrain;
 using UnityEngine;
 using Camera = Sagan.Framework.Camera;
 
 namespace Sagan.Terrain {
     public class Terrain : SaganObject {
         private GameObject _parent;
+
         public ILodStrategy _lodStrategy { get; private set; }
 
-        public Quad rootQuad { get; private set; }
+        public int depth { get; private set; }
+        public int terrainSize { get; private set; }
 
-        private int levels;
         private Camera cam;
+
         public HeightMap heightMap { get; private set; }
 
         private bool _boundingBoxesVisible = false;
+
         public bool showQuadBoundingBox  {
             get { return this._boundingBoxesVisible; }
             set {
@@ -26,9 +25,12 @@ namespace Sagan.Terrain {
             }
         }
 
-        public Terrain(int terrainSize, int levels, Camera cam, ILodStrategy lodStrategy = null)
+        public Terrain(int terrainSize, int depth, Camera cam, ILodStrategy lodStrategy = null)
             : base(name: "SaganTerrain") {
-            this.levels = levels;
+
+            this.terrainSize = terrainSize;
+
+            this.depth = depth;
 
             // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
             this.heightMap = new HeightMap(terrainSize + 1);
@@ -36,7 +38,7 @@ namespace Sagan.Terrain {
             this.cam = cam;
 
             if (lodStrategy == null) {
-                this._lodStrategy = new ProlandLodStrategy(terrainSize, this.heightMap, this.levels);
+                this._lodStrategy = new ProlandLodStrategy(this);
             }
         }
 
@@ -54,34 +56,34 @@ namespace Sagan.Terrain {
             this._lodStrategy.Update(this.cam);
         }
 
-        /// <summary>
-        /// Spherify all Quads with given radius.
-        /// This method assumes the vertices were already precalculated this Terrain via preCalculateVertices()
-        /// </summary>
-        /// <param name="radius">Radius of the sphere</param>
-        public void Spherify(float radius) {
-            // Create the rootQuad mesh so we can get it's bounding box
-            this.rootQuad.Create();
-            // Get the center of the rootQuad, this is essentially the center of the entire terrain square
-            var center = this.rootQuad.localBoundingBox.center;
-
-            // Set the center point to a length of radius below the rootQuad that will simulate the center of the planet sphere
-            center.y = -radius;
-
-            foreach (Quad quad in this._lodStrategy.quads) {
-                for (int i = 0; i < quad.verts.Count; i++) {
-                    // Get the quad's vertex relative to the parent terrain
-                    var vert = quad.verts[i] + quad.transform.localPosition;
-                    // Remove height component for now
-                    float height = vert.y;
-                    vert.y = 0;
-                    // Convert the vector to a unit from our simulated sphere center and then multiply by radius to spherify
-                    // See: http://ducttapeeinstein.com/mapping-a-cube-to-sphere-in-c-unity-3d-the-start-of-procedural-planet-generation/
-                    var spherizedVert = (vert - center).normalized*(radius + height);
-                    // Remove the radius height and parent vertex transform to get back the local coordinate again
-                    quad.verts[i] = (spherizedVert - new Vector3(0, radius, 0) - quad.transform.localPosition);
-                }
-            }
-        }
+//        /// <summary>
+//        /// Spherify all Quads with given radius.
+//        /// This method assumes the vertices were already precalculated this Terrain via preCalculateVertices()
+//        /// </summary>
+//        /// <param name="radius">Radius of the sphere</param>
+//        public void Spherify(float radius) {
+//            // Create the rootQuad mesh so we can get it's bounding box
+//            this.rootQuad.Create();
+//            // Get the center of the rootQuad, this is essentially the center of the entire terrain square
+//            var center = this.rootQuad.localBoundingBox.center;
+//
+//            // Set the center point to a length of radius below the rootQuad that will simulate the center of the planet sphere
+//            center.y = -radius;
+//
+//            foreach (Quad quad in this._lodStrategy.quads) {
+//                for (int i = 0; i < quad.verts.Count; i++) {
+//                    // Get the quad's vertex relative to the parent terrain
+//                    var vert = quad.verts[i] + quad.transform.localPosition;
+//                    // Remove height component for now
+//                    float height = vert.y;
+//                    vert.y = 0;
+//                    // Convert the vector to a unit from our simulated sphere center and then multiply by radius to spherify
+//                    // See: http://ducttapeeinstein.com/mapping-a-cube-to-sphere-in-c-unity-3d-the-start-of-procedural-planet-generation/
+//                    var spherizedVert = (vert - center).normalized*(radius + height);
+//                    // Remove the radius height and parent vertex transform to get back the local coordinate again
+//                    quad.verts[i] = (spherizedVert - new Vector3(0, radius, 0) - quad.transform.localPosition);
+//                }
+//            }
+//        }
     }
 }

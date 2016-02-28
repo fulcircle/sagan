@@ -66,7 +66,7 @@ namespace Sagan.Planet {
 
             this._planetCube.AddChild(face);
             face.Precalculate();
-            face.Spherify(this.radius);
+//            face.Spherify(this.radius);
             face.Create();
 
             face.transform.Translate(translate);
