@@ -24,7 +24,7 @@ namespace Sagan.Terrain {
             var zdiff = camPos.z - quad.transform.localPosition.z;
 
             var xdistance = Mathf.Min(Mathf.Abs(xdiff), Mathf.Abs(xdiff - quad.size));
-            var ydistance = Mathf.Min(Mathf.Abs(ydiff), Mathf.Abs(ydiff - quad.size));
+            var ydistance = Mathf.Abs(ydiff);
             var zdistance = Mathf.Min(Mathf.Abs(zdiff), Mathf.Abs(zdiff - quad.size));
 
             var distance = Mathf.Max(xdistance, ydistance, zdistance);
