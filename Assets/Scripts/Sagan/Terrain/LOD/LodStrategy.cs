@@ -11,18 +11,25 @@ public abstract class LodStrategy : ILodStrategy {
 
     public Sagan.Terrain.Terrain terrain;
 
+    protected Shader _shader = Shader.Find("Sagan/Base");
+
+    public Shader shader {
+        get { return this._shader; }
+        protected set { this._shader = value; }
+    }
+
     public LodStrategy(Sagan.Terrain.Terrain terrain) {
         this.terrain = terrain;
     }
 
 
-    public void Precalculate() {
+    public virtual void Precalculate() {
         quads = new List<Quad>();
         rootQuad = new Quad(0, this.terrain.terrainSize, this.terrain.terrainSize*0.5f, this.terrain.heightMap);
         GenerateQuadTree(rootQuad);
     }
 
-    private void GenerateQuadTree(Quad parentQuad) {
+    protected virtual void GenerateQuadTree(Quad parentQuad) {
         quads.Add(parentQuad);
 
         parentQuad.PreCalculate();
@@ -62,12 +69,21 @@ public abstract class LodStrategy : ILodStrategy {
         }
     }
 
+    protected void SetMaterial(Quad q) {
+        q.material = new Material(this._shader);
+        q.material.SetFloat("_MaxHeight", this.terrain.heightMap.maxHeightValue);
+        q.material.SetFloat("_MinHeight", this.terrain.heightMap.minHeightValue);
+    }
+
     protected abstract void Render(Camera cam, Quad quad, float scalingFactor = 1.0f);
 
-    public abstract void Spherify(); 
+    public abstract void Spherify();
 
     public void Create() {
-        quads.ForEach(q => q.Create());
+        quads.ForEach(q => {
+            this.SetMaterial(q);
+            q.Create();
+        });
     }
 
     public void Update(Camera cam) {

@@ -48,12 +48,6 @@ namespace Sagan.Terrain {
             this.subdivisions = subdivisions;
 
             this._step = size / this.subdivisions;
-            
-            this.material = new Material(Shader.Find("Sagan/ColorHeight"));
-
-            this.material.SetFloat("_MaxHeight", this._heightMap.maxHeightValue);
-            this.material.SetFloat("_MinHeight", this._heightMap.minHeightValue);
-
         }
 
 

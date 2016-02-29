@@ -32,9 +32,10 @@ namespace Sagan.Terrain {
             if (quad.isLeaf) {
                 quad.active = true;
             } else if (distance < splitDistanceFactor * quad.size) {
-                quad.active = false;
+
+                quad.active = true;
+
                 quad.children.ForEach(q => {
-                    q.active = true;
                     this.Render(cam, q, scalingFactor);
                 });
             // Is the root node
