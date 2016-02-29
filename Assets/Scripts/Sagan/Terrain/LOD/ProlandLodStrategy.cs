@@ -7,8 +7,17 @@ namespace Sagan.Terrain {
     public class ProlandLodStrategy : LodStrategy {
         public float splitDistanceFactor = 1.2f;
 
-        public ProlandLodStrategy(Sagan.Terrain.Terrain terrain) : base(terrain) {}
+        public ProlandLodStrategy(Sagan.Terrain.Terrain terrain) : base(terrain) {
+            this.shader = Shader.Find("Sagan/Proland");
+        }
 
+        protected override void SetMaterial(Quad q) {
+            base.SetMaterial(q);
+            q.material.SetFloat("_QuadLength", q.size);
+            q.material.SetFloat("_SplitDistanceFactor", splitDistanceFactor);
+            q.material.SetMatrix("_TerrainMatrixWTL", terrain.transform.worldToLocalMatrix);
+            q.material.SetVector("_QuadPosition", q.transform.localPosition);
+        }
         // Proland LOD implementation: http://proland.imag.fr/doc/proland-4.0/core/html/index.html
         protected override void Render(Camera cam, Quad quad, float scalingFactor = 1.0f) {
 
@@ -33,9 +42,10 @@ namespace Sagan.Terrain {
                 quad.active = true;
             } else if (distance < splitDistanceFactor * quad.size) {
 
-                quad.active = true;
+                quad.active = false;
 
                 quad.children.ForEach(q => {
+                    q.active = true;
                     this.Render(cam, q, scalingFactor);
                 });
             // Is the root node

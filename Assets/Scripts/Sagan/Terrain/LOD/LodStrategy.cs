@@ -69,7 +69,7 @@ public abstract class LodStrategy : ILodStrategy {
         }
     }
 
-    protected void SetMaterial(Quad q) {
+    protected virtual void SetMaterial(Quad q) {
         q.material = new Material(this._shader);
         q.material.SetFloat("_MaxHeight", this.terrain.heightMap.maxHeightValue);
         q.material.SetFloat("_MinHeight", this.terrain.heightMap.minHeightValue);
