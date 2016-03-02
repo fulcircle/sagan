@@ -7,25 +7,27 @@ namespace Sagan.Terrain {
     public class UlrichLodStrategy : AbstractLodStrategy {
         public UlrichLodStrategy(Sagan.Terrain.Terrain terrain) : base(terrain) {}
 
-        public Quad NewChildQuad(Quad parentQuad=null) {
-            var ulrichQuad = (UlrichQuad) parentQuad;
-            if ( ulrichQuad == null) {
+        public override Quad NewChildQuad(Quad parentQuad=null) {
+            if (parentQuad == null) {
                 return new UlrichQuad(0, this.terrain.size, this.terrain.size, this.terrain.heightMap);
             }
             else {
-                return new UlrichQuad(parentQuad.LOD + 1, parentQuad.size * 0.5f, parentQuad.error * 0.5f, this.terrain.heightMap);
+                var error = ((UlrichQuad) parentQuad).error;
+                return new UlrichQuad(parentQuad.LOD + 1, parentQuad.size * 0.5f, error * 0.5f, this.terrain.heightMap);
             }
         }
 
         // TODO: Optimizations
         // Store coordinates of bounding boxes and exclude branches in quadtree that are out of range
         protected override void Render(Camera cam, Quad quad, float scalingFactor = 1.0f) {
+            var error = ((UlrichQuad) quad).error;
+
             var camPos = cam.transform.position;
             var closestPoint = quad.boundingBox.ClosestPoint(camPos);
             var distance = Vector3.Distance(closestPoint, camPos);
 
             // Screen space error
-            var rho = quad.error/distance*scalingFactor;
+            var rho = error / distance * scalingFactor;
 
             // Largest allowable screen error
             float tau = 120;

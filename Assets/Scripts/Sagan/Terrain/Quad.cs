@@ -15,8 +15,6 @@ namespace Sagan.Terrain {
 
         public Quad parent;
 
-        public float error {get; private set;}
-
         public List<Vector3> verts {
             get;
             private set;
@@ -40,8 +38,6 @@ namespace Sagan.Terrain {
             this.size = size;
 
             this.LOD = LOD;
-
-            this.error = error;
 
             this._heightMap = heightMap;
 
