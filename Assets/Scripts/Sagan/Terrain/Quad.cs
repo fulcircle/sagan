@@ -36,7 +36,7 @@ namespace Sagan.Terrain {
         private float _maxHeight = 20;
         private HeightMap _heightMap;
 
-        public Quad(int LOD, float size, float error, HeightMap heightMap, int subdivisions=12) : base(name: "Quad") {
+        public Quad(int LOD, float size, HeightMap heightMap, int subdivisions=12) : base(name: "Quad") {
             this.size = size;
 
             this.LOD = LOD;

@@ -4,30 +4,37 @@ using Sagan.Terrain;
 using UnityEngine;
 using Camera = Sagan.Framework.Camera;
 
-public abstract class LodStrategy : ILodStrategy {
+public abstract class AbstractLodStrategy : ILodStrategy {
     public Quad rootQuad { get; private set; }
 
     public List<Quad> quads { get; private set; }
 
     public Sagan.Terrain.Terrain terrain;
 
-    protected Shader _shader = Shader.Find("Sagan/Base");
+    public Shader shader { get; protected set; }
 
-    public Shader shader {
-        get { return this._shader; }
-        protected set { this._shader = value; }
-    }
-
-    public LodStrategy(Sagan.Terrain.Terrain terrain) {
+    public AbstractLodStrategy(Sagan.Terrain.Terrain terrain, string shader="Sagan/Base") {
         this.terrain = terrain;
+        this.shader = Shader.Find(shader);
     }
 
 
     public virtual void Precalculate() {
         quads = new List<Quad>();
-        rootQuad = new Quad(0, this.terrain.terrainSize, this.terrain.terrainSize*0.5f, this.terrain.heightMap);
+        rootQuad = this.NewChildQuad();
         GenerateQuadTree(rootQuad);
     }
+
+    public virtual Quad NewChildQuad(Quad parentQuad=null) {
+        if (parentQuad == null) {
+            return new Quad(0, this.terrain.size, this.terrain.heightMap);
+        }
+        else {
+            return new Quad(parentQuad.LOD + 1, parentQuad.size * 0.5f, this.terrain.heightMap);
+        }
+
+    }
+
 
     protected virtual void GenerateQuadTree(Quad parentQuad) {
         quads.Add(parentQuad);
@@ -49,13 +56,11 @@ public abstract class LodStrategy : ILodStrategy {
         var stride = parentQuad.size*0.5f;
 
         for (var i = 0; i < 4; i++) {
-            var childQuad = new Quad(parentQuad.LOD + 1,
-                parentQuad.size*0.5f,
-                parentQuad.error*0.5f,
-                this.terrain.heightMap);
+            var childQuad = this.NewChildQuad(parentQuad);
 
             parentQuad.children.Add(childQuad);
             childQuad.parent = parentQuad;
+
 
             childQuad.transform.localPosition = new Vector3(currX, currY, currZ);
 
@@ -70,7 +75,7 @@ public abstract class LodStrategy : ILodStrategy {
     }
 
     protected virtual void SetMaterial(Quad q) {
-        q.material = new Material(this._shader);
+        q.material = new Material(this.shader);
         q.material.SetFloat("_MaxHeight", this.terrain.heightMap.maxHeightValue);
         q.material.SetFloat("_MinHeight", this.terrain.heightMap.minHeightValue);
     }

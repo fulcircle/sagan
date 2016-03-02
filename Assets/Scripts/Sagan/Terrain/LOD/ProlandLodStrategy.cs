@@ -4,12 +4,10 @@ using UnityEngine;
 using Camera = Sagan.Framework.Camera;
 
 namespace Sagan.Terrain {
-    public class ProlandLodStrategy : LodStrategy {
+    public class ProlandLodStrategy : AbstractLodStrategy {
         public float splitDistanceFactor = 1.2f;
 
-        public ProlandLodStrategy(Sagan.Terrain.Terrain terrain) : base(terrain) {
-            this.shader = Shader.Find("Sagan/Proland");
-        }
+        public ProlandLodStrategy(Sagan.Terrain.Terrain terrain) : base(terrain, shader: "Sagan/Proland") { }
 
         protected override void SetMaterial(Quad q) {
             base.SetMaterial(q);

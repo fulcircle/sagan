@@ -9,7 +9,7 @@ namespace Sagan.Terrain {
         public ILodStrategy _lodStrategy { get; private set; }
 
         public int depth { get; private set; }
-        public int terrainSize { get; private set; }
+        public int size { get; private set; }
 
         private Camera cam;
 
@@ -25,15 +25,15 @@ namespace Sagan.Terrain {
             }
         }
 
-        public Terrain(int terrainSize, int depth, Camera cam, ILodStrategy lodStrategy = null)
+        public Terrain(int size, int depth, Camera cam, ILodStrategy lodStrategy = null)
             : base(name: "SaganTerrain") {
 
-            this.terrainSize = terrainSize;
+            this.size = size;
 
             this.depth = depth;
 
             // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
-            this.heightMap = new HeightMap(terrainSize + 1);
+            this.heightMap = new HeightMap(size + 1);
 
             this.cam = cam;
 
