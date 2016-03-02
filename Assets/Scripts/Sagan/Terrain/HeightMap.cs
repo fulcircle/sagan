@@ -48,6 +48,7 @@ namespace Sagan.Terrain {
             }
         }
 
+        // This is normally done in the vertex shader, but leaving here as a reference implementation on CPU
         public float GetHeight(float x, float y) {
 
             // Interpolate the height value for x,y on the heightmap using bilinear interpolation
@@ -96,6 +97,20 @@ namespace Sagan.Terrain {
         private float HeightMapFunc(int x, int y) {
             var result = Mathf.PerlinNoise(x * 3.234f, y * 3.21234f) * 5.5f;
             return result;
+        }
+
+        public Texture2D ToTexture() {
+            var texture = new Texture2D(this.size, this.size, TextureFormat.Alpha8, false);
+            var pixelBuffer = new byte[this.size*this.size];
+            for (var i = 0; i < size; i++) {
+                for (var j = 0; j < size; j++) {
+                    var scaled = 255 * ((this._heightMap[i,j] - minHeightValue) / (maxHeightValue - minHeightValue));
+                    pixelBuffer[i*size + j] = (byte) Mathf.RoundToInt(scaled);
+                }
+            }
+            texture.LoadRawTextureData(pixelBuffer);
+            texture.Apply();
+            return texture;
         }
     }
 }

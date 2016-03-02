@@ -15,6 +15,7 @@ namespace Sagan.Terrain {
             q.material.SetFloat("_SplitDistanceFactor", splitDistanceFactor);
             q.material.SetMatrix("_TerrainMatrixWTL", terrain.transform.worldToLocalMatrix);
             q.material.SetVector("_QuadPosition", q.transform.localPosition);
+            q.material.SetTexture("_HeightMap", this.terrain.heightMap.ToTexture());
         }
         // Proland LOD implementation: http://proland.imag.fr/doc/proland-4.0/core/html/index.html
         protected override void Render(Camera cam, Quad quad, float scalingFactor = 1.0f) {
