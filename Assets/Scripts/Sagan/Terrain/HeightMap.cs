@@ -6,7 +6,7 @@ namespace Sagan.Terrain {
 
     public class HeightMap {
 
-        private float[,] _heightMap;
+        public float[,] heightArray { get; private set; }
         public float maxHeightValue {
             get;
             private set;
@@ -30,10 +30,10 @@ namespace Sagan.Terrain {
         }
 
         private void InitMap() {
-            this._heightMap = new float[this.size, this.size];
+            this.heightArray = new float[this.size, this.size];
 
-            for (int a = 0; a < this._heightMap.GetLength(0); a++) {
-                for (int b = 0; b < this._heightMap.GetLength(1); b++) {
+            for (int a = 0; a < this.heightArray.GetLength(0); a++) {
+                for (int b = 0; b < this.heightArray.GetLength(1); b++) {
 
                     var height = this.HeightMapFunc(a, b);
 
@@ -43,7 +43,7 @@ namespace Sagan.Terrain {
                         this.minHeightValue = height;
                     }
 
-                    this._heightMap[a, b] = height;
+                    this.heightArray[a, b] = height;
                 }
             }
         }
@@ -68,10 +68,10 @@ namespace Sagan.Terrain {
 
             // The four surrounding pixels to this pixel on the heightmap
             // TODO: Replace with Mathf.lerp
-            float q11 = this._heightMap[x1, y1];
-            float q12 = this._heightMap[x1, y2];
-            float q21 = this._heightMap[x2, y1];
-            float q22 = this._heightMap[x2, y2];
+            float q11 = this.heightArray[x1, y1];
+            float q12 = this.heightArray[x1, y2];
+            float q21 = this.heightArray[x2, y1];
+            float q22 = this.heightArray[x2, y2];
 
             // The bilinear interpolation
             // TODO: Replace with Mathf.lerp
@@ -99,18 +99,5 @@ namespace Sagan.Terrain {
             return result;
         }
 
-        public Texture2D ToTexture() {
-            var texture = new Texture2D(this.size, this.size, TextureFormat.Alpha8, false);
-            var pixelBuffer = new byte[this.size*this.size];
-            for (var i = 0; i < size; i++) {
-                for (var j = 0; j < size; j++) {
-                    var scaled = 255 * ((this._heightMap[i,j] - minHeightValue) / (maxHeightValue - minHeightValue));
-                    pixelBuffer[i*size + j] = (byte) Mathf.RoundToInt(scaled);
-                }
-            }
-            texture.LoadRawTextureData(pixelBuffer);
-            texture.Apply();
-            return texture;
-        }
     }
 }

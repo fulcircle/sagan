@@ -34,6 +34,8 @@ namespace Sagan.Terrain {
         private float _maxHeight = 20;
         private HeightMap _heightMap;
 
+        public HeightMap quadHeightMap { get; private set; }
+
         public Quad(int LOD, float size, HeightMap heightMap, int subdivisions=12) : base(name: "Quad") {
             this.size = size;
 
@@ -44,6 +46,35 @@ namespace Sagan.Terrain {
             this.subdivisions = subdivisions;
 
             this._step = size / this.subdivisions;
+        }
+
+        public virtual Texture2D GetHeightMapTexture() {
+            var textureSize = Mathf.CeilToInt(this.size) + 1;
+            var texture = new Texture2D(textureSize, textureSize, TextureFormat.Alpha8, false);
+            var pixelBuffer = new byte[textureSize * textureSize];
+
+            // Get the minimum coordinates of quad
+            var min = this.transform.localPosition;
+
+            // Get the min and max coordinates of the corresponding terrain patch
+            var min_x = Mathf.FloorToInt(this.transform.localPosition.x);
+            var max_x = textureSize;
+
+            var min_z = Mathf.FloorToInt(this.transform.localPosition.z);
+            var max_z = textureSize;
+
+            // Iterate over each coordinate in the terrain patch and assign to pixelbuffer
+            for (var x = min_x; x < max_x; x++) {
+                for (var z = min_z; z < max_z; z++) {
+                    var heightVal = this._heightMap.heightArray[x, z];
+                    var result = Mathf.Lerp(0, 255, Mathf.InverseLerp(this._heightMap.minHeightValue, this._heightMap.maxHeightValue, heightVal));
+                    result = Mathf.RoundToInt(result);
+                    pixelBuffer[(x*max_x) + z] = (byte)result;
+                }
+            }
+            texture.LoadRawTextureData(pixelBuffer);
+            texture.Apply();
+            return texture;
         }
 
 
@@ -104,6 +135,7 @@ namespace Sagan.Terrain {
         }
 
         float GetHeight(float x, float z) {
+            return 0;
             return this._heightMap.GetHeight(x, z);
         }
     }

@@ -10,14 +10,17 @@
 			 #pragma fragment frag // frag function is the fragment shader
 
 			 float4x4 _TerrainMatrixWTL, _QuadPosition;
-			 sampler2d _HeightMap;
+			 sampler2D _HeightMap;
 
 			// vertex shader
 			saganVertexOutput vert(appdata_base v) {
 				saganVertexOutput v_out;
+				float2 coords;
 
 				float4 vertexPos = v.vertex;
-				sampler2D _HeightMap;
+				half alpha = tex2D(_HeightMap, vertexPos.xz).a;
+
+				vertexPos.y = alpha;
 
 				float4 localSpaceCamerPos = mul(_TerrainMatrixWTL, _WorldSpaceCameraPos);
 				v_out.position = mul(UNITY_MATRIX_MVP, vertexPos);
