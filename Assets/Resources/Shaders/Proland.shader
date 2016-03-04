@@ -6,8 +6,6 @@
 
 			 #include "Assets/Resources/Shaders/Sagan.cginc"
 
-			 #pragma glsl
-			 #pragma target 3.0
 			 #pragma vertex vert // vert function is the vertex shader
 			 #pragma fragment frag // frag function is the fragment shader
 
