@@ -15,12 +15,10 @@
 			// vertex shader
 			saganVertexOutput vert(appdata_base v) {
 				saganVertexOutput v_out;
-				float2 coords;
 
 				float4 vertexPos = v.vertex;
-				half alpha = tex2D(_HeightMap, vertexPos.xz).a;
 
-				vertexPos.y = alpha;
+				float alpha = tex2D(_HeightMap, float2(0.0, 0.0)).r;
 
 				float4 localSpaceCamerPos = mul(_TerrainMatrixWTL, _WorldSpaceCameraPos);
 				v_out.position = mul(UNITY_MATRIX_MVP, vertexPos);

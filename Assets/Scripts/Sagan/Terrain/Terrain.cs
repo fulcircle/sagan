@@ -32,7 +32,7 @@ namespace Sagan.Terrain {
 
             this.depth = depth;
 
-            // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra heightArray point beyond edge of quad
+            // Add +1 to width and height of heightmap so bilinear interpolation of quad can interpolate extra data point beyond edge of quad
             this.heightMap = new HeightMap(size + 1);
 
             this.cam = cam;

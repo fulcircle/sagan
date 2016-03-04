@@ -50,7 +50,7 @@ namespace Sagan.Terrain {
 
         public virtual Texture2D GetHeightMapTexture() {
             var textureSize = Mathf.CeilToInt(this.size) + 1;
-            var texture = new Texture2D(textureSize, textureSize, TextureFormat.Alpha8, false);
+            var texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBA32, false);
             var pixelBuffer = new byte[textureSize * textureSize];
 
             // Get the minimum coordinates of quad
@@ -67,12 +67,12 @@ namespace Sagan.Terrain {
             for (var x = min_x; x < max_x; x++) {
                 for (var z = min_z; z < max_z; z++) {
                     var heightVal = this._heightMap.heightArray[x, z];
-                    var result = Mathf.Lerp(0, 255, Mathf.InverseLerp(this._heightMap.minHeightValue, this._heightMap.maxHeightValue, heightVal));
-                    result = Mathf.RoundToInt(result);
-                    pixelBuffer[(x*max_x) + z] = (byte)result;
+                    var result = Mathf.InverseLerp(this._heightMap.minHeightValue, this._heightMap.maxHeightValue, heightVal);
+                    texture.SetPixel(x, z, new Color(result, 0.0f, 0.0f, 0.0f));
+//                    pixelBuffer[(x*max_x) + z] = (byte)result;
                 }
             }
-            texture.LoadRawTextureData(pixelBuffer);
+//            texture.LoadRawTextureData(pixelBuffer);
             texture.Apply();
             return texture;
         }
