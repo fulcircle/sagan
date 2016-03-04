@@ -6,6 +6,8 @@
 
 			 #include "Assets/Resources/Shaders/Sagan.cginc"
 
+			 #pragma glsl
+			 #pragma target 3.0
 			 #pragma vertex vert // vert function is the vertex shader
 			 #pragma fragment frag // frag function is the fragment shader
 
@@ -18,7 +20,8 @@
 
 				float4 vertexPos = v.vertex;
 
-				float alpha = tex2D(_HeightMap, float2(0.0, 0.0)).r;
+				float height = tex2Dlod(_HeightMap, float4(vertexPos.xz, 0, 0)).r;
+				vertexPos.y += height;
 
 				float4 localSpaceCamerPos = mul(_TerrainMatrixWTL, _WorldSpaceCameraPos);
 				v_out.position = mul(UNITY_MATRIX_MVP, vertexPos);
