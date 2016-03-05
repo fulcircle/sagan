@@ -22,6 +22,8 @@ namespace Sagan.Terrain {
             private set;
         }
 
+        public Texture2D texture { get; private set; }
+
         public HeightMap(int size) {
             this.size = size;
             this.maxHeightValue = 0;
@@ -46,6 +48,24 @@ namespace Sagan.Terrain {
                     this.heightArray[a, b] = height;
                 }
             }
+            this.texture = this.GetHeightMapTexture();
+        }
+
+
+        public virtual Texture2D GetHeightMapTexture() {
+            var texture = new Texture2D(this.size, this.size, TextureFormat.ARGB32, false);
+
+            // Iterate over each coordinate in the heightmap and assign the value to a texture's pixel
+            for (var x = 0; x < this.size; x++) {
+                for (var z = 0; z < this.size; z++) {
+                    var heightVal = this.heightArray[x, z];
+                    // TODO: We'll probably need to lerp in the shader
+                    var result = Mathf.InverseLerp(this.minHeightValue, this.maxHeightValue, heightVal);
+                    texture.SetPixel(x, z, new Color(result, 0.0f, 0.0f, 0.0f));
+                }
+            }
+            texture.Apply();
+            return texture;
         }
 
         // This is normally done in the vertex shader, but leaving here as a reference implementation on CPU
