@@ -86,8 +86,8 @@ public abstract class AbstractLodStrategy : ILodStrategy {
 
     public void Create() {
         quads.ForEach(q => {
-            this.SetMaterial(q);
             q.Create();
+            this.SetMaterial(q);
         });
     }
 

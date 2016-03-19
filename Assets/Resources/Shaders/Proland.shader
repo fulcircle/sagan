@@ -9,8 +9,10 @@
 			 #pragma vertex vert // vert function is the vertex shader
 			 #pragma fragment frag // frag function is the fragment shader
 
-			 float4x4 _TerrainMatrixWTL, _QuadPosition;
+			 float4x4 _TerrainMatrixWTL;
+			 float4 _QuadPosition;
 			 sampler2D _HeightMap;
+			 int _TerrainSize;
 
 			// vertex shader
 			saganVertexOutput vert(appdata_base v) {
@@ -18,7 +20,10 @@
 
 				float4 vertexPos = v.vertex;
 
-				float height = tex2Dlod(_HeightMap, float4(vertexPos.xz, 0, 0)).r;
+				float vertexX = rescale(0, (float)_TerrainSize, 0, 1, _QuadPosition[0] + vertexPos.x);
+				float vertexZ = rescale(0, (float)_TerrainSize, 0, 1, _QuadPosition[2] + vertexPos.z);
+
+				float height = tex2Dlod(_HeightMap, float4(vertexX, vertexZ, 0, 0)).r;
 				vertexPos.y += height;
 
 				float4 localSpaceCamerPos = mul(_TerrainMatrixWTL, _WorldSpaceCameraPos);

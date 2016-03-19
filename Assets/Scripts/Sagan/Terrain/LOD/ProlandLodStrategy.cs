@@ -15,6 +15,7 @@ namespace Sagan.Terrain {
             q.material.SetFloat("_SplitDistanceFactor", splitDistanceFactor);
             q.material.SetMatrix("_TerrainMatrixWTL", terrain.transform.worldToLocalMatrix);
             q.material.SetVector("_QuadPosition", q.transform.localPosition);
+            q.material.SetInt("_TerrainSize", this.terrain.size);
             q.material.SetTexture("_HeightMap", this.terrain.heightMap.texture);
         }
         // Proland LOD implementation: http://proland.imag.fr/doc/proland-4.0/core/html/index.html
