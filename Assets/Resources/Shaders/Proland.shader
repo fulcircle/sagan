@@ -10,7 +10,7 @@
 			 #pragma fragment frag // frag function is the fragment shader
 
 			 float4x4 _TerrainMatrixWTL;
-			 float4 _QuadPosition;
+			 float3 _QuadPosition;
 			 sampler2D _HeightMap;
 			 int _TerrainSize;
 
