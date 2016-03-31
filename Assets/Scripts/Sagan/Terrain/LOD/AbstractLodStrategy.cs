@@ -13,9 +13,13 @@ public abstract class AbstractLodStrategy : ILodStrategy {
 
     public Shader shader { get; protected set; }
 
-    public AbstractLodStrategy(Sagan.Terrain.Terrain terrain, string shader="Sagan/Base") {
+    public virtual string shaderName {
+        get { return "Sagan/Base"; }
+    }
+
+    public AbstractLodStrategy(Sagan.Terrain.Terrain terrain) {
         this.terrain = terrain;
-        this.shader = Shader.Find(shader);
+        this.shader = Shader.Find(this.shaderName);
     }
 
 
