@@ -25,6 +25,7 @@ namespace Sagan.Terrain {
             }
         }
 
+        // TODO:Need to fix ILodStrategy parameter to take LodStrategy CLASS and not INSTANCE
         public Terrain(int size, int depth, Camera cam, ILodStrategy lodStrategy = null)
             : base(name: "SaganTerrain") {
 
@@ -38,7 +39,7 @@ namespace Sagan.Terrain {
             this.cam = cam;
 
             if (lodStrategy == null) {
-                this._lodStrategy = new ProlandLodStrategy(this);
+                this._lodStrategy = new TessellationLodStrategy(this);
             }
         }
 
